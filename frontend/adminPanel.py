@@ -118,7 +118,7 @@ class AdminPanel(QtWidgets.QMainWindow):
             ("Dashboard", "images/dashboard.png"),
             ("Workers", "images/list.png"),
             ("Customers", "images/clients.png"),
-            ("Categorys", "images/category.png"),
+            ("Categories", "images/category.png"),
             ("Address", "images/address.png"),
             ("Transactions", "images/transaction.png")
         ]:
@@ -154,7 +154,7 @@ class AdminPanel(QtWidgets.QMainWindow):
             "Dashboard": 0,
             "Workers": 1,
             "Customers": 2,
-            "Categorys": 3,
+            "Categories": 3,
             "Address": 4,
             "Transactions": 5
         }

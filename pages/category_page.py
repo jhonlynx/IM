@@ -20,7 +20,7 @@ class CategoryPage(QtWidgets.QWidget):
 
         # Header with title and search
         header_layout = QtWidgets.QHBoxLayout()
-        title = QtWidgets.QLabel("CATEGORYS LIST")
+        title = QtWidgets.QLabel("CATEGORIES LIST")
         title.setStyleSheet("""
             font-family: 'Montserrat', sans-serif;
             font-size: 24px;
@@ -137,7 +137,7 @@ class CategoryPage(QtWidgets.QWidget):
                     background-color: #f0f0f0;
                 }
             """)
-            edit_btn.clicked.connect(lambda _, row=row: self.show_edit_address_page(row))
+            edit_btn.clicked.connect(lambda _, row=row: self.show_edit_category_page(row))
 
             actions_layout.addWidget(deactivate_btn)
             actions_layout.addWidget(edit_btn)
@@ -146,67 +146,76 @@ class CategoryPage(QtWidgets.QWidget):
 
 
     def show_add_category_page(self):
-        # Create dialog instead of widget
         add_dialog = QtWidgets.QDialog(self)
         add_dialog.setWindowTitle("New Category")
         add_dialog.setModal(True)
-        add_dialog.setMinimumWidth(500)
+        add_dialog.setFixedSize(600, 200)
         add_dialog.setStyleSheet("""
             QDialog {
                 background-color: #C9EBCB;
             }
+            QLabel {
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+            }
         """)
-        
-        layout = QtWidgets.QVBoxLayout(add_dialog)
-        layout.setContentsMargins(20, 20, 20, 20)
 
-        # Header
+        layout = QtWidgets.QVBoxLayout(add_dialog)
+        layout.setContentsMargins(30, 10, 30, 10)
+        layout.setSpacing(10)
+
+        # Title
         title = QtWidgets.QLabel("ADD NEW CATEGORY")
         title.setStyleSheet("""
-            font-family: 'Montserrat', sans-serif;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 20px;
+            padding: 10px;
         """)
+        title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
 
         # Form layout
-        form_layout = QtWidgets.QFormLayout()
-        form_layout.setSpacing(15)
+        form_layout = QtWidgets.QGridLayout()
+        form_layout.setHorizontalSpacing(40)
+        form_layout.setVerticalSpacing(20)
 
-        # Input fields
-        fields = [
-            ("Category Name", QtWidgets.QLineEdit()),
-        ]
-
-        # Style inputs
         input_style = """
-            QLineEdit, QComboBox {
+            QLineEdit {
+                font-family: 'Arial';
+                font-size: 14px;
                 padding: 8px;
-                border: 1px solid #ccc;
+                border: 1px solid #bdc3c7;
                 border-radius: 4px;
-                font-family: 'Roboto', sans-serif;
-                min-width: 300px;
+                background-color: #ffffff;
             }
         """
-        
-        # Add fields to form and apply styles
-        for label, widget in fields:
-            widget.setStyleSheet(input_style)
-            form_layout.addRow(f"{label}:", widget)
+
+        # Create reusable label+input block
+        def create_labeled_widget(label_text, widget):
+            wrapper = QtWidgets.QVBoxLayout()
+            label = QtWidgets.QLabel(label_text)
+            label.setFont(QtGui.QFont("Arial", 10))
+            wrapper.addWidget(label)
+            wrapper.addWidget(widget)
+            return wrapper
+
+        # Category input
+        category_name_input = QtWidgets.QLineEdit()
+        category_name_input.setStyleSheet(input_style)
+
+        form_layout.addLayout(create_labeled_widget("CATEGORY NAME:", category_name_input), 0, 0)
 
         layout.addLayout(form_layout)
         layout.addStretch()
 
-        # Buttons container
+        # Button container
         button_container = QtWidgets.QWidget()
         button_layout = QtWidgets.QHBoxLayout(button_container)
         button_layout.setAlignment(QtCore.Qt.AlignRight)
 
-        # Cancel button
         cancel_btn = QtWidgets.QPushButton("Cancel")
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #ccc;
+                background-color: #95a5a6;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -214,16 +223,15 @@ class CategoryPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: #999;
+                background-color: #7f8c8d;
             }
         """)
         cancel_btn.clicked.connect(add_dialog.reject)
 
-        # Save button
         save_btn = QtWidgets.QPushButton("Save")
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgb(229, 115, 115);
+                background-color: #27ae60;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -231,18 +239,17 @@ class CategoryPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: rgb(200, 100, 100);
+                background-color: #219a52;
             }
         """)
-        def save_customer():
-            pass
 
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         layout.addWidget(button_container)
 
-        # Show dialog
         add_dialog.exec_()
+
+
 
     def show_edit_category_page(self, row):
         category_id = self.categorys_table.item(row, 0).text()
@@ -250,41 +257,62 @@ class CategoryPage(QtWidgets.QWidget):
 
         edit_dialog = QtWidgets.QDialog(self)
         edit_dialog.setWindowTitle("Edit Category")
-        edit_dialog.setModal(True)
-        edit_dialog.setMinimumWidth(500)
+        edit_dialog.setFixedSize(600, 250)
         edit_dialog.setStyleSheet("""
             QDialog {
                 background-color: #C9EBCB;
             }
+            QLabel {
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+            }
         """)
 
         layout = QtWidgets.QVBoxLayout(edit_dialog)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(30, 20, 30, 20)
+        layout.setSpacing(10)
 
+        # Title
         title = QtWidgets.QLabel("EDIT CATEGORY")
         title.setStyleSheet("""
-            font-family: 'Montserrat', sans-serif;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 20px;
+            padding: 10px;
         """)
+        title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
 
-        form_layout = QtWidgets.QFormLayout()
-        form_layout.setSpacing(15)
+        # Input styles
+        input_style = """
+            QLineEdit {
+                font-family: 'Arial';
+                font-size: 14px;
+                padding: 8px;
+                border: 1px solid #bdc3c7;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+        """
+
+        # Create labeled widget helper
+        def create_labeled_widget(label_text, widget):
+            container = QtWidgets.QVBoxLayout()
+            label = QtWidgets.QLabel(label_text)
+            label.setFont(QtGui.QFont("Arial", 10))
+            container.addWidget(label)
+            container.addWidget(widget)
+            return container
+
+        # Form layout
+        form_layout = QtWidgets.QGridLayout()
+        form_layout.setHorizontalSpacing(30)
+        form_layout.setVerticalSpacing(15)
 
         name_input = QtWidgets.QLineEdit(current_name)
-        name_input.setStyleSheet("""
-            QLineEdit {
-                padding: 8px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                font-family: 'Roboto', sans-serif;
-                min-width: 300px;
-            }
-        """)
-        form_layout.addRow("Category Name:", name_input)
+        name_input.setStyleSheet(input_style)
+
+        form_layout.addLayout(create_labeled_widget("CATEGORY NAME:", name_input), 0, 0)
+
         layout.addLayout(form_layout)
-        layout.addStretch()
 
         # Buttons
         button_container = QtWidgets.QWidget()
@@ -294,7 +322,7 @@ class CategoryPage(QtWidgets.QWidget):
         cancel_btn = QtWidgets.QPushButton("Cancel")
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #ccc;
+                background-color: #95a5a6;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -302,7 +330,7 @@ class CategoryPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: #999;
+                background-color: #7f8c8d;
             }
         """)
         cancel_btn.clicked.connect(edit_dialog.reject)
@@ -310,7 +338,7 @@ class CategoryPage(QtWidgets.QWidget):
         save_btn = QtWidgets.QPushButton("Save")
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgb(229, 115, 115);
+                background-color: #27ae60;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -318,14 +346,17 @@ class CategoryPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: rgb(200, 100, 100);
+                background-color: #219a52;
             }
         """)
 
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         layout.addWidget(button_container)
+
         edit_dialog.exec_()
+
+
 
     def deactivate_category(self, row):
         category_id = self.categorys_table.item(row, 0).text()

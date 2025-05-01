@@ -125,9 +125,9 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         """)
         
         # Set up table columns
-        self.billing_table.setColumnCount(7)
+        self.billing_table.setColumnCount(8)
         self.billing_table.setHorizontalHeaderLabels([
-            "BILLING CODE", "ISSUED DATE", "BILLING DUE", "CLIENT ID", "CLIENT NAME", "CLIENT LOCATION", "BILLING TOTAL"
+            "BILLING CODE", "ISSUED DATE", "BILLING DUE", "CLIENT ID", "CLIENT NAME", "CLIENT LOCATION", "BILLING TOTAL", "STATUS"
         ])
 
         billing_back = adminPageBack()
@@ -150,7 +150,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         
         for row, billings  in enumerate(data):
             # Unpack all values (now expecting 11 values in the customer tuple)
-            billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total = billings
+            billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total, status = billings
 
             # Add customer data to the table
             self.billing_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(billing_code))),
@@ -160,6 +160,14 @@ class EmployeeBillingPage(QtWidgets.QWidget):
             self.billing_table.setItem(row, 4, QtWidgets.QTableWidgetItem(client_name)),
             self.billing_table.setItem(row, 5, QtWidgets.QTableWidgetItem(client_location)),
             self.billing_table.setItem(row, 6, QtWidgets.QTableWidgetItem(str(billing_total)))
+            self.billing_table.setItem(row, 7, QtWidgets.QTableWidgetItem(status))
+
+            # Status with color coding
+            status_item = QtWidgets.QTableWidgetItem(status)
+            status_item.setForeground(
+                QtGui.QColor("#64B5F6") if status == "PAID" else QtGui.QColor("#E57373")
+            )
+            self.billing_table.setItem(row, 7, status_item)
 
 
 

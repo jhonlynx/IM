@@ -235,95 +235,99 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
             self.customers_table.setRowHidden(row, not match)
 
     def show_add_customer_page(self):
-        # Create dialog instead of widget
         add_dialog = QtWidgets.QDialog(self)
         add_dialog.setWindowTitle("New Customer")
         add_dialog.setModal(True)
-        add_dialog.setMinimumWidth(500)
+        add_dialog.setFixedSize(1000, 700)
         add_dialog.setStyleSheet("""
             QDialog {
                 background-color: #C9EBCB;
             }
+            QLabel {
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+            }
         """)
-        
-        layout = QtWidgets.QVBoxLayout(add_dialog)
-        layout.setContentsMargins(20, 20, 20, 20)
 
-        # Header
+        layout = QtWidgets.QVBoxLayout(add_dialog)
+        layout.setContentsMargins(30, 5, 30, 5)
+        layout.setSpacing(10)
+
+        # Section Title
         title = QtWidgets.QLabel("ADD NEW CUSTOMER")
         title.setStyleSheet("""
-            font-family: 'Montserrat', sans-serif;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 20px;
+            padding: 10px;
         """)
+        title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
 
-        # Form layout
-        form_layout = QtWidgets.QFormLayout()
-        form_layout.setSpacing(15)
+        form_layout = QtWidgets.QGridLayout()
+        form_layout.setHorizontalSpacing(40)
+        form_layout.setVerticalSpacing(20)
 
-        # Input fields
-        fields = [
-            ("First Name", QtWidgets.QLineEdit()),
-            ("Middle Name", QtWidgets.QLineEdit()),
-            ("Last Name", QtWidgets.QLineEdit()),
-            ("Contact Number", QtWidgets.QLineEdit()),
-            ("Category", QtWidgets.QComboBox()),
-            ("Location", QtWidgets.QLineEdit()),
-            ("Address", QtWidgets.QComboBox()),
-            ("Serial Number", QtWidgets.QLineEdit()),
-            ("First Reading", QtWidgets.QLineEdit()),
-        ]
-
-        # Instantiate backend
-        IadminPageBack = adminPageBack()
-
-        # Fetch and populate categories
-        categories = IadminPageBack.fetch_categories()
-        category_combo = next(widget for label, widget in fields if label == "Category")
-        for category in categories:
-            category_id, category_name = category  # Adjust depending on actual tuple structure
-            category_combo.addItem(category_name, category_id)
-
-        # Fetch and populate addresses
-        addresses = IadminPageBack.fetch_address()
-        address_combo = next(widget for label, widget in fields if label == "Address")
-        for address in addresses:
-            address_id, address_name = address  # Adjust depending on actual tuple structure
-            address_combo.addItem(address_name, address_id)
-
-        
-
-
-        # Style inputs
         input_style = """
             QLineEdit, QComboBox {
+                font-family: 'Arial';
+                font-size: 14px;
                 padding: 8px;
-                border: 1px solid #ccc;
+                border: 1px solid #bdc3c7;
                 border-radius: 4px;
-                font-family: 'Roboto', sans-serif;
-                min-width: 300px;
+                background-color: #ffffff;
             }
         """
-        
-        # Add fields to form and apply styles
-        for label, widget in fields:
+
+        def create_labeled_widget(label_text, widget):
+            container = QtWidgets.QVBoxLayout()
+            label = QtWidgets.QLabel(label_text)
+            label.setFont(QtGui.QFont("Arial", 10))
+            container.addWidget(label)
+            container.addWidget(widget)
+            return container
+
+        fields = {
+            "First Name": QtWidgets.QLineEdit(),
+            "Middle Name": QtWidgets.QLineEdit(),
+            "Last Name": QtWidgets.QLineEdit(),
+            "Contact Number": QtWidgets.QLineEdit(),
+            "Category": QtWidgets.QComboBox(),
+            "Location": QtWidgets.QLineEdit(),
+            "Address": QtWidgets.QComboBox(),
+            "Serial Number": QtWidgets.QLineEdit(),
+            "First Reading": QtWidgets.QLineEdit(),
+        }
+
+        for widget in fields.values():
             widget.setStyleSheet(input_style)
-            form_layout.addRow(f"{label}:", widget)
+
+        # Fetch backend data
+        IadminPageBack = adminPageBack()
+        for category_id, category_name in IadminPageBack.fetch_categories():
+            fields["Category"].addItem(category_name, category_id)
+        for address_id, address_name in IadminPageBack.fetch_address():
+            fields["Address"].addItem(address_name, address_id)
+
+        # Layout inputs in 2 columns
+        left_fields = ["First Name", "Middle Name", "Last Name", "Contact Number", "Category"]
+        right_fields = ["Location", "Address", "Serial Number", "First Reading"]
+
+        for i, key in enumerate(left_fields):
+            form_layout.addLayout(create_labeled_widget(f"{key}:", fields[key]), i, 0)
+
+        for i, key in enumerate(right_fields):
+            form_layout.addLayout(create_labeled_widget(f"{key}:", fields[key]), i, 1)
 
         layout.addLayout(form_layout)
-        layout.addStretch()
 
-        # Buttons container
+        # Buttons
         button_container = QtWidgets.QWidget()
         button_layout = QtWidgets.QHBoxLayout(button_container)
         button_layout.setAlignment(QtCore.Qt.AlignRight)
 
-        # Cancel button
         cancel_btn = QtWidgets.QPushButton("Cancel")
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #ccc;
+                background-color: #95a5a6;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -331,16 +335,15 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: #999;
+                background-color: #7f8c8d;
             }
         """)
         cancel_btn.clicked.connect(add_dialog.reject)
 
-        # Save button
         save_btn = QtWidgets.QPushButton("Save Customer")
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgb(229, 115, 115);
+                background-color: #e74c3c;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -348,114 +351,66 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: rgb(200, 100, 100);
+                background-color: #c0392b;
             }
         """)
+
         def save_customer():
-            categ_id = category_combo.currentData()
+            category_combo = fields["Category"]
+            address_combo = fields["Address"]
+            category_id = category_combo.currentData()
             address_id = address_combo.currentData()
 
-            input_values = {}
-            for label, widget in fields:
-                if isinstance(widget, QtWidgets.QLineEdit):
-                    input_values[label] = widget.text().strip()
-                elif isinstance(widget, QtWidgets.QComboBox):
-                    input_values[label] = widget.currentText().strip()
+            input_values = {label: widget.text().strip() if isinstance(widget, QtWidgets.QLineEdit) else widget.currentText().strip() for label, widget in fields.items()}
 
-            # Validate required fields
-            missing_fields = []
-            for label, widget in fields:
-                if label == "Middle Name":
-                    continue  # skip optional field
-
-                if isinstance(widget, QtWidgets.QLineEdit) and not widget.text().strip():
-                    missing_fields.append(label)
-                elif isinstance(widget, QtWidgets.QComboBox) and widget.currentText().strip() == "":
-                    missing_fields.append(label)
-
+            missing_fields = [label for label in fields if label != "Middle Name" and not input_values[label]]
             if missing_fields:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error",
-                    f"Must fill all the fields"
-                )
+                QtWidgets.QMessageBox.warning(self, "Missing Fields", "Please fill in all the required fields.")
                 return
-            
-            # Validate that name fields contain only letters
+
             name_fields = ["First Name", "Middle Name", "Last Name"]
-            invalid_name_fields = []
-
-            for label in name_fields:
-                widget = dict(fields)[label]
-                widget.setStyleSheet(input_style)  # Reset style before validating
-                widget.setToolTip("")              # Clear previous tooltips
-                name_text = widget.text().strip()
-                
-                if name_text and not name_text.replace(" ", "").isalpha():
-                    invalid_name_fields.append(label)
-                    widget.setStyleSheet(f"{input_style} border: 2px solid red;")
-                    widget.setToolTip(f"{label} must contain letters only")
-
+            invalid_name_fields = [label for label in name_fields if input_values[label] and not input_values[label].replace(" ", "").isalpha()]
             if invalid_name_fields:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error",
-                    f"This fields must contain letters only: {', '.join(invalid_name_fields)}"
-                )
+                QtWidgets.QMessageBox.warning(self, "Error", f"These fields must contain letters only: {', '.join(invalid_name_fields)}")
                 return
 
-
-            contact_str = input_values["Contact Number"]
             try:
-                contact = float(contact_str) if contact_str else None
+                float(input_values["Contact Number"])
             except ValueError:
                 QtWidgets.QMessageBox.warning(self, "Error", "Contact Number must be a valid number.")
-                return    
+                return
 
-
-            # Handle meter reading conversion
-            reading_str = input_values["First Reading"]
             try:
-                meter_reading = float(reading_str) if reading_str else None
+                meter_reading = float(input_values["First Reading"])
             except ValueError:
                 QtWidgets.QMessageBox.warning(self, "Error", "First Reading must be a number.")
                 return
 
-            # Add meter
-            IadminPageBack = adminPageBack()
             meter_id = IadminPageBack.add_meter(meter_reading, input_values["Serial Number"])
-
-            # Add customer
             new_client_id = IadminPageBack.add_client(
                 client_name=input_values["First Name"],
                 client_lname=input_values["Last Name"],
                 client_contact_num=input_values["Contact Number"],
                 client_location=input_values["Location"],
                 meter_id=meter_id,
-                address_id= address_id,
-                categ_id= category_id,
+                address_id=address_id,
+                categ_id=category_id,
                 client_mname=input_values["Middle Name"],
                 status="Active"
             )
 
             QtWidgets.QMessageBox.information(self, "Success", "Customer added successfully.")
             add_dialog.accept()
-
-            # Refresh the customer list
             updated_data = IadminPageBack.fetch_clients()
             self.populate_table(updated_data)
 
         save_btn.clicked.connect(save_customer)
-
-        
-
-
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         layout.addWidget(button_container)
 
-        # Show dialog
-        add_dialog.exec_() 
+        add_dialog.exec_()
+ 
 
     def toggle_search_input(self, text):
             if text == "Category":

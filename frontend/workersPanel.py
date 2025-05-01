@@ -145,7 +145,7 @@ class WorkersPanel(QtWidgets.QMainWindow):
         self.nav_buttons = []
         for text, icon_path in [
             ("Customers", "images/clients.png"),
-            ("Categorys", "images/category.png"),
+            ("Categories", "images/category.png"),
             ("Address", "images/address.png"),
             ("Billing", "images/bill.png"),
             ("Transactions", "images/transaction.png")
@@ -255,7 +255,7 @@ class WorkersPanel(QtWidgets.QMainWindow):
         # Change stacked widget page
         page_index = {
             "Customers": 0,
-            "Categorys": 1,
+            "Categories": 1,
             "Address": 2,
             "Billing": 3,
             "Transactions": 4

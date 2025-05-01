@@ -156,68 +156,84 @@ class AdminWorkersPage(QtWidgets.QWidget):
             # self.customers_table.setCellWidget(row, 11, actions_widget)  # Place action buttons in the 11th column
 
     def show_add_workers_page(self):
-        # Create dialog instead of widget
         add_dialog = QtWidgets.QDialog(self)
-        add_dialog.setWindowTitle("Add New Workers")
+        add_dialog.setWindowTitle("Add New Worker")
         add_dialog.setModal(True)
-        add_dialog.setMinimumWidth(500)
+        add_dialog.setFixedSize(600, 400)
         add_dialog.setStyleSheet("""
             QDialog {
                 background-color: #C9EBCB;
             }
+            QLabel {
+                font-family: 'Arial', sans-serif;
+                font-weight: bold;
+            }
         """)
-        
-        layout = QtWidgets.QVBoxLayout(add_dialog)
-        layout.setContentsMargins(20, 20, 20, 20)
 
-        # Header
-        title = QtWidgets.QLabel("ADD NEW WORKERS")
-        title.setStyleSheet("""
-            font-family: 'Montserrat', sans-serif;
-            font-size: 24px;
-            font-weight: bold;
-        """)
+        layout = QtWidgets.QVBoxLayout(add_dialog)
+        layout.setContentsMargins(30, 10, 30, 10)
+        layout.setSpacing(10)
+
+        # Section Title
+        title = QtWidgets.QLabel("WORKER REGISTRATION FORM")
+        title.setStyleSheet("font-size: 18px; padding: 10px;")
+        title.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(title)
 
-        # Form layout
-        form_layout = QtWidgets.QFormLayout()
-        form_layout.setSpacing(15)
+        # Form Layout
+        form_layout = QtWidgets.QGridLayout()
+        form_layout.setHorizontalSpacing(40)
+        form_layout.setVerticalSpacing(20)
 
-        # Input fields
-        fields = [
-            ("NAME", QtWidgets.QLineEdit()),
-            ("USERNAME", QtWidgets.QLineEdit()),
-            ("PASSWORD", QtWidgets.QLineEdit()),
-        ]
-        # Style inputs
         input_style = """
-            QLineEdit, QComboBox {
+            QLineEdit {
+                font-family: 'Arial';
+                font-size: 14px;
                 padding: 8px;
-                border: 1px solid #ccc;
+                border: 1px solid #bdc3c7;
                 border-radius: 4px;
-                font-family: 'Roboto', sans-serif;
-                min-width: 300px;
+                background-color: #ffffff;
             }
         """
-        
-        # Add fields to form and apply styles
-        for label, widget in fields:
-            widget.setStyleSheet(input_style)
-            form_layout.addRow(f"{label}:", widget)
+
+        def create_labeled_widget(label_text, widget):
+            sub_layout = QtWidgets.QVBoxLayout()
+            label = QtWidgets.QLabel(label_text)
+            label.setFont(QtGui.QFont("Arial", 10))
+            sub_layout.addWidget(label)
+            sub_layout.addWidget(widget)
+            return sub_layout
+
+        # Input fields
+        name_input = QtWidgets.QLineEdit()
+        name_input.setStyleSheet(input_style)
+
+        username_input = QtWidgets.QLineEdit()
+        username_input.setStyleSheet(input_style)
+
+        password_input = QtWidgets.QLineEdit()
+        password_input.setEchoMode(QtWidgets.QLineEdit.Password)
+        password_input.setStyleSheet(input_style)
+
+        # Layout with labeled inputs
+        form_layout.addLayout(create_labeled_widget("NAME:", name_input), 0, 0)
+        form_layout.addLayout(create_labeled_widget("USERNAME:", username_input), 1, 0)
+        form_layout.addLayout(create_labeled_widget("PASSWORD:", password_input), 2, 0)
 
         layout.addLayout(form_layout)
+
+        # Spacer
         layout.addStretch()
 
-        # Buttons container
+        # Buttons
         button_container = QtWidgets.QWidget()
         button_layout = QtWidgets.QHBoxLayout(button_container)
         button_layout.setAlignment(QtCore.Qt.AlignRight)
 
-        # Cancel button
         cancel_btn = QtWidgets.QPushButton("Cancel")
         cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #ccc;
+                background-color: #95a5a6;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -225,16 +241,15 @@ class AdminWorkersPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: #999;
+                background-color: #7f8c8d;
             }
         """)
         cancel_btn.clicked.connect(add_dialog.reject)
 
-        # Save button
-        save_btn = QtWidgets.QPushButton("Save Customer")
+        save_btn = QtWidgets.QPushButton("Save")
         save_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgb(229, 115, 115);
+                background-color: #27ae60;
                 color: white;
                 padding: 8px 15px;
                 border-radius: 4px;
@@ -242,7 +257,7 @@ class AdminWorkersPage(QtWidgets.QWidget):
                 min-width: 100px;
             }
             QPushButton:hover {
-                background-color: rgb(200, 100, 100);
+                background-color: #219a52;
             }
         """)
         save_btn.clicked.connect(add_dialog.accept)
@@ -251,8 +266,9 @@ class AdminWorkersPage(QtWidgets.QWidget):
         button_layout.addWidget(save_btn)
         layout.addWidget(button_container)
 
-        # Show dialog
-        add_dialog.exec_() 
+        add_dialog.exec_()
+
+
           
 
 
