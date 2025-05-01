@@ -108,9 +108,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
         search_add_layout.addWidget(add_btn)
         
         header_layout.addLayout(search_add_layout)
-        layout.addLayout(header_layout)  
-
-
+        layout.addLayout(header_layout) 
 
         # Table setup
         self.customers_table = QtWidgets.QTableWidget()
@@ -134,7 +132,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
         self.customers_table.setColumnCount(9)
         self.customers_table.verticalHeader().setVisible(False)
         self.customers_table.setHorizontalHeaderLabels([
-            "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
+            "CLIENT ID", "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
             "CATEGORY", "ADDRESS", "LOCATION", "STATUS"
         ])
         
@@ -157,25 +155,26 @@ class AdminCustomersPage(QtWidgets.QWidget):
         
         for row, customer in enumerate(data):
             # Unpack all values (now expecting 11 values in the customer tuple)
-            client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status = customer
+            client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status = customer
 
             # Add customer data to the table
-            self.customers_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(client_number)))
-            self.customers_table.setItem(row, 1, QtWidgets.QTableWidgetItem(fname))
-            self.customers_table.setItem(row, 2, QtWidgets.QTableWidgetItem(middle_name))
-            self.customers_table.setItem(row, 3, QtWidgets.QTableWidgetItem(lname))
-            self.customers_table.setItem(row, 4, QtWidgets.QTableWidgetItem(contact))
-            self.customers_table.setItem(row, 5, QtWidgets.QTableWidgetItem(categ_name))
-            self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(address_id))
-            self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(location))
-            self.customers_table.setItem(row, 8, QtWidgets.QTableWidgetItem(status))
+            self.customers_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(client_id)))
+            self.customers_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(client_number)))
+            self.customers_table.setItem(row, 2, QtWidgets.QTableWidgetItem(fname))
+            self.customers_table.setItem(row, 3, QtWidgets.QTableWidgetItem(middle_name))
+            self.customers_table.setItem(row, 4, QtWidgets.QTableWidgetItem(lname))
+            self.customers_table.setItem(row, 5, QtWidgets.QTableWidgetItem(contact))
+            self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(categ_name))
+            self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(address_id))
+            self.customers_table.setItem(row, 8, QtWidgets.QTableWidgetItem(location))
+            self.customers_table.setItem(row, 9, QtWidgets.QTableWidgetItem(status))
 
             # Status with color coding
             status_item = QtWidgets.QTableWidgetItem(status)
             status_item.setForeground(
                 QtGui.QColor("#64B5F6") if status == "Active" else QtGui.QColor("#E57373")
             )
-            self.customers_table.setItem(row, 8, status_item)
+            self.customers_table.setItem(row, 9, status_item)
 
             # # Action buttons
             # actions_widget = QtWidgets.QWidget()

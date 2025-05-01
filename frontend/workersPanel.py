@@ -10,6 +10,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PyQt5 import QtCore, QtGui, QtWidgets
 from pages.employee_customers_page import EmployeeCustomersPage
 from pages.billing_page import EmployeeBillingPage
+from pages.category_page import CategoryPage
+from pages.address_page import AddressPage
 from pages.transactions_page import TransactionsPage
 
 class WorkersPanel(QtWidgets.QMainWindow):
@@ -74,13 +76,17 @@ class WorkersPanel(QtWidgets.QMainWindow):
     def initialize_pages(self):
         # Initialize all pages
         self.customers_page = EmployeeCustomersPage(self)
+        self.category_page = CategoryPage(self)
+        self.address_page = AddressPage(self)
         self.billing_page = EmployeeBillingPage(self)
         self.transactions_page = TransactionsPage(self)
         
         # Add pages to stacked widget     # Index 0
-        self.stacked_widget.addWidget(self.customers_page)     # Index 1
-        self.stacked_widget.addWidget(self.billing_page)       # Index 2
-        self.stacked_widget.addWidget(self.transactions_page)  # Index 3
+        self.stacked_widget.addWidget(self.customers_page)     
+        self.stacked_widget.addWidget(self.category_page) 
+        self.stacked_widget.addWidget(self.address_page) 
+        self.stacked_widget.addWidget(self.billing_page)       
+        self.stacked_widget.addWidget(self.transactions_page)  
 
     def setup_sidebar(self):
         sidebar = QtWidgets.QFrame()
@@ -138,7 +144,9 @@ class WorkersPanel(QtWidgets.QMainWindow):
         # Navigation buttons
         self.nav_buttons = []
         for text, icon_path in [
-            ("List of Customers", "images/clients.png"),
+            ("Customers", "images/clients.png"),
+            ("Categorys", "images/category.png"),
+            ("Address", "images/address.png"),
             ("Billing", "images/bill.png"),
             ("Transactions", "images/transaction.png")
         ]:
@@ -246,9 +254,11 @@ class WorkersPanel(QtWidgets.QMainWindow):
         
         # Change stacked widget page
         page_index = {
-            "List of Customers": 0,
-            "Billing": 1,
-            "Transactions": 2
+            "Customers": 0,
+            "Categorys": 1,
+            "Address": 2,
+            "Billing": 3,
+            "Transactions": 4
         }
         
         if page_name in page_index:

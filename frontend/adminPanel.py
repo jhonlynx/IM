@@ -12,7 +12,8 @@ from pages.admin_dashboard_page import AdminDashboardPage
 from pages.admin_workers_page import AdminWorkersPage
 from pages.admin_customers_page import AdminCustomersPage
 from pages.admin_transactions_page import AdminTransactionsPage
-from pages.add_worker_page import AddWorkerPage
+from pages.category_page import CategoryPage
+from pages.address_page import AddressPage
 
 class AdminPanel(QtWidgets.QMainWindow):
     def __init__(self):
@@ -45,15 +46,17 @@ class AdminPanel(QtWidgets.QMainWindow):
         self.dashboard_page = AdminDashboardPage(self)
         self.workers_page = AdminWorkersPage(self)
         self.customers_page = AdminCustomersPage(self)
+        self.category_page = CategoryPage(self)
+        self.address_page = AddressPage(self)
         self.transactions_page = AdminTransactionsPage(self)
-        self.add_worker_page = AddWorkerPage(self)
         
         # Add pages to stacked widget
-        self.stacked_widget.addWidget(self.dashboard_page)      # Index 0
-        self.stacked_widget.addWidget(self.workers_page)        # Index 1
-        self.stacked_widget.addWidget(self.customers_page)      # Index 2
-        self.stacked_widget.addWidget(self.transactions_page)   # Index 3
-        self.stacked_widget.addWidget(self.add_worker_page)     # Index 4
+        self.stacked_widget.addWidget(self.dashboard_page)      
+        self.stacked_widget.addWidget(self.workers_page)        
+        self.stacked_widget.addWidget(self.customers_page)  
+        self.stacked_widget.addWidget(self.category_page) 
+        self.stacked_widget.addWidget(self.address_page)
+        self.stacked_widget.addWidget(self.transactions_page)    
 
 
     def setup_sidebar(self):
@@ -113,8 +116,10 @@ class AdminPanel(QtWidgets.QMainWindow):
         self.nav_buttons = []
         for text, icon_path in [
             ("Dashboard", "images/dashboard.png"),
-            ("List of Workers", "images/list.png"),
-            ("List of Customers", "images/clients.png"),
+            ("Workers", "images/list.png"),
+            ("Customers", "images/clients.png"),
+            ("Categorys", "images/category.png"),
+            ("Address", "images/address.png"),
             ("Transactions", "images/transaction.png")
         ]:
             btn = QtWidgets.QPushButton(text)
@@ -147,9 +152,11 @@ class AdminPanel(QtWidgets.QMainWindow):
         # Change stacked widget page
         page_index = {
             "Dashboard": 0,
-            "List of Workers": 1,
-            "List of Customers": 2,
-            "Transactions": 3
+            "Workers": 1,
+            "Customers": 2,
+            "Categorys": 3,
+            "Address": 4,
+            "Transactions": 5
         }
         
         if page_name in page_index:

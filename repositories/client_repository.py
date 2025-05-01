@@ -19,7 +19,7 @@ class ClientRepository:
                 FROM CLIENT c
                 JOIN CATEGORY cat ON c.CATEG_ID = cat.CATEG_ID
                 JOIN ADDRESS a ON c.ADDRESS_ID = a.ADDRESS_ID
-                ORDER BY client_number ASC
+                ORDER BY client_id ASC
             """)
             clients = cursor.fetchall()
 
