@@ -1,0 +1,86 @@
+import psycopg2
+from database.Database import DBConnector
+
+class MeterRepository:
+    def __init__(self):
+        self.db_connector = DBConnector()
+
+    def get_connection(self):
+        return self.db_connector.get_connection()
+
+    def get_all_meter(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM METER;")
+        meters = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return meters
+    
+    def get_meter_by_id(self, meter_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM METER WHERE ID = %s;",
+            (meter_id,)
+        )
+        meter = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return meter
+    
+
+    def create_meter(self, meter_last_reading, serial_number):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO METER (
+                METER_LAST_READING, METER_LAST_READING_DATE, METER_CODE, SERIAL_NUMBER
+            ) VALUES (
+                %s, CURRENT_DATE,
+                'MTR-' || LPAD(nextval('meter_code_alphanumeric')::text, 5, '0'), %s
+            )
+            RETURNING METER_ID;
+        """, (
+            meter_last_reading, serial_number
+        ))
+        new_id = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return new_id
+
+    # def update_meter(self, username, password, role):
+    #     conn = self.get_connection()
+    #     cursor = conn.cursor()
+    #     cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
+    #     user = cursor.fetchone()
+
+    #     if user:
+    #         cursor.execute("UPDATE USERS SET USERNAME = %s, PASSWORD = %s, ROLE = %s WHERE USER_ID = %s;",
+    #             (username, password, role, user_id))
+    #         conn.commit()
+    #         cursor.close()
+    #         conn.close()
+    #         return True
+    #     else:
+    #         cursor.close()
+    #         conn.close()
+    #         return False
+
+    def delete_user(self, user_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
+        user = cursor.fetchone()
+
+        if user:
+            cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return True
+        else:
+            cursor.close()
+            conn.close()
+            return False
