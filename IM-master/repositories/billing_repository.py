@@ -8,14 +8,14 @@ class BillingRepository:
     def get_connection(self):
         return self.db_connector.get_connection()
 
-    # def get_all_billing(self):
-    #     conn = self.get_connection()
-    #     cursor = conn.cursor()
-    #     cursor.execute("SELECT * FROM BILLING;")
-    #     bill = cursor.fetchall()
-    #     cursor.close()
-    #     conn.close()
-    #     return bill
+    def get_billing_by_id(self, billing_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM BILLING WHERE ID = %s;", (billing_id,))
+        bill = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return bill
     
     
     def create_billing(self, billing_due, billing_total, billing_consumption, reading_id, client_id, categ_id, billing_date):
@@ -26,11 +26,11 @@ class BillingRepository:
             "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING BILLING_ID;",
             (billing_due, billing_total, billing_consumption, reading_id, client_id, categ_id, billing_date)
         )
-        new_id = cursor.fetchone()[0]
+        new_bill = cursor.fetchone()[0]
         conn.commit()
         cursor.close()
         conn.close()
-        return new_id
+        return new_bill
     
     def get_all_billing(self):
         try:
@@ -77,23 +77,6 @@ class BillingRepository:
         if user:
             cursor.execute("UPDATE USERS SET USERNAME = %s, PASSWORD = %s, ROLE = %s WHERE USER_ID = %s;",
                 (username, password, role, user_id))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-        else:
-            cursor.close()
-            conn.close()
-            return False
-
-    def delete_user(self, user_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
-        user = cursor.fetchone()
-
-        if user:
-            cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
             conn.commit()
             cursor.close()
             conn.close()

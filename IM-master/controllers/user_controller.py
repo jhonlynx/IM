@@ -4,6 +4,9 @@ class UserController:
     def __init__(self):
         self.user_repo = UserRepository()
 
+    def get_meter_by_id(self, user_id):
+        return self.user_repo.get_user_by_id(user_id)
+
     def check_user(self, username, password):
         return self.user_repo.check_user(username, password)
     

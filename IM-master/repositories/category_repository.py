@@ -17,6 +17,18 @@ class CategoryRepository:
         conn.close()
         return category
     
+    def get_category_by_id(self, categ_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM CATEGORY WHERE ID = %s;",
+            (categ_id,)
+        )
+        category = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return category
+    
     def create_category(self, categ_name):
         conn = self.get_connection()
         cursor = conn.cursor()

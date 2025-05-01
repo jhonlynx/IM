@@ -7,6 +7,18 @@ class UserRepository:
 
     def get_connection(self):
         return self.db_connector.get_connection()
+    
+    def get_user_by_id(self, user_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM USER WHERE ID = %s;",
+            (user_id,)
+        )
+        user = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return user
 
     def check_user(self, username, password):
         conn = self.get_connection()
@@ -84,19 +96,19 @@ class UserRepository:
             conn.close()
             return False
 
-    def delete_user(self, user_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
-        user = cursor.fetchone()
+    # def delete_user(self, user_id):
+    #     conn = self.get_connection()
+    #     cursor = conn.cursor()
+    #     cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
+    #     user = cursor.fetchone()
 
-        if user:
-            cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-        else:
-            cursor.close()
-            conn.close()
-            return False
+    #     if user:
+    #         cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
+    #         conn.commit()
+    #         cursor.close()
+    #         conn.close()
+    #         return True
+    #     else:
+    #         cursor.close()
+    #         conn.close()
+    #         return False
