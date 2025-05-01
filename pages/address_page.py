@@ -55,12 +55,13 @@ class AddressPage(QtWidgets.QWidget):
 
         # Table setup
         self.address_table = QtWidgets.QTableWidget()
-        # self.customers_table.verticalHeader().setVisible(False)
+        self.address_table.setAlternatingRowColors(True)
         self.address_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;

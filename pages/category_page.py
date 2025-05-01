@@ -55,12 +55,13 @@ class CategoryPage(QtWidgets.QWidget):
 
         # Table setup
         self.categorys_table = QtWidgets.QTableWidget()
-        # self.customers_table.verticalHeader().setVisible(False)
+        self.categorys_table.setAlternatingRowColors(True)
         self.categorys_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;

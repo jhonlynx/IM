@@ -80,12 +80,13 @@ class AdminWorkersPage(QtWidgets.QWidget):
 
         # Table setup
         self.workers_table = QtWidgets.QTableWidget()
-        self.workers_table.verticalHeader().setVisible(False)
+        self.workers_table.setAlternatingRowColors(True)
         self.workers_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;
@@ -109,6 +110,7 @@ class AdminWorkersPage(QtWidgets.QWidget):
         
         # Adjust table properties
         self.workers_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.workers_table.verticalHeader().setVisible(False)
         self.workers_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.workers_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         

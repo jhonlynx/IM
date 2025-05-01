@@ -112,12 +112,13 @@ class AdminCustomersPage(QtWidgets.QWidget):
 
         # Table setup
         self.customers_table = QtWidgets.QTableWidget()
-        # self.customers_table.verticalHeader().setVisible(False)
+        self.customers_table.setAlternatingRowColors(True)
         self.customers_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;
@@ -127,9 +128,10 @@ class AdminCustomersPage(QtWidgets.QWidget):
                 font-weight: bold;
             }
         """)
+
         
         # Set up columns (10 columns)
-        self.customers_table.setColumnCount(9)
+        self.customers_table.setColumnCount(10)
         self.customers_table.verticalHeader().setVisible(False)
         self.customers_table.setHorizontalHeaderLabels([
             "CLIENT ID", "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
@@ -216,13 +218,14 @@ class AdminCustomersPage(QtWidgets.QWidget):
                 if search_by == "ID":
                     item = self.customers_table.item(row, 0)
                 elif search_by == "First Name":
-                    item = self.customers_table.item(row, 1)
+                    item = self.customers_table.item(row, 2)
                 elif search_by == "Last Name":
-                    item = self.customers_table.item(row, 3)
+                    item = self.customers_table.item(row, 4)
                 elif search_by == "Location":
-                    item = self.customers_table.item(row, 7)
+                    item = self.customers_table.item(row, 8)
                 elif search_by == "Category":
-                    item = self.customers_table.item(row, 5)
+                    item = self.customers_table.item(row, 6)
+
                 
                 if item and search_text in item.text().lower():
                     match = True
@@ -371,11 +374,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
                     missing_fields.append(label)
 
             if missing_fields:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Error",
-                    f"This fill all the fields"
-                )
+                QtWidgets.QMessageBox.warning(self, "Missing Fields", "Please fill in all the required fields.")
                 return
             
             # Validate that name fields contain only letters

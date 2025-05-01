@@ -114,12 +114,13 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
 
         # Table setup
         self.customers_table = QtWidgets.QTableWidget()
-        self.customers_table.verticalHeader().setVisible(False)
+        self.customers_table.setAlternatingRowColors(True)
         self.customers_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;
@@ -145,6 +146,7 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
         # Adjust table properties
         self.customers_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.customers_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
+        self.customers_table.verticalHeader().setVisible(False)
         self.customers_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
         layout.addWidget(self.customers_table)

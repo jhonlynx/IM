@@ -107,12 +107,13 @@ class EmployeeBillingPage(QtWidgets.QWidget):
 
         # Billing Table
         self.billing_table = QtWidgets.QTableWidget()
-        self.billing_table.verticalHeader().setVisible(False)
+        self.billing_table.setAlternatingRowColors(True)
         self.billing_table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;
@@ -138,6 +139,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         # Adjust table properties
         self.billing_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.billing_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
+        self.billing_table.verticalHeader().setVisible(False)
         self.billing_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
         layout.addWidget(self.billing_table)

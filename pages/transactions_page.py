@@ -123,11 +123,13 @@ class TransactionsPage(QtWidgets.QWidget):
 
     def create_transactions_table(self):
         table = QtWidgets.QTableWidget()
+        table.setAlternatingRowColors(True)
         table.setStyleSheet("""
             QTableWidget {
                 border: 1px solid #ccc;
                 border-radius: 4px;
-                background-color: #C9EBCB;
+                background-color: #E8F5E9;
+                alternate-background-color: #FFFFFF;
             }
             QHeaderView::section {
                 background-color: #B2C8B2;
