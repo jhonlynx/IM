@@ -38,7 +38,7 @@ class BillingRepository:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT b.billing_code, b.issued_date, b.billing_due, c.client_id, c.client_name, c.client_location,
-                            b.billing_total, b.billing_status
+                            b.billing_total
                 FROM BILLING b
                 JOIN CLIENT c ON b.client_id = c.client_id
             """)
@@ -46,14 +46,14 @@ class BillingRepository:
             billings = cursor.fetchall()
 
             # Prepare data for the table (formatted_clients)
-            formatted_clients = [
+            formatted_billings = [
                 (
-                    billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total, billing_status
+                    billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total
                 )
-                for billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total, billing_status in billings
+                for billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total in billings
             ]
 
-            return formatted_clients
+            return formatted_billings
 
         except Exception as e:
             print(f"Database error: {e}")

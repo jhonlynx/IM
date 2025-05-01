@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from pages.admin_dashboard_page import AdminDashboardPage
 from pages.admin_workers_page import AdminWorkersPage
 from pages.admin_customers_page import AdminCustomersPage
-from pages.admin_transactions_page import AdminTransactionsPage
+from pages.transactions_page import TransactionsPage
 from pages.category_page import CategoryPage
 from pages.address_page import AddressPage
 
@@ -48,7 +48,7 @@ class AdminPanel(QtWidgets.QMainWindow):
         self.customers_page = AdminCustomersPage(self)
         self.category_page = CategoryPage(self)
         self.address_page = AddressPage(self)
-        self.transactions_page = AdminTransactionsPage(self)
+        self.transactions_page = TransactionsPage(self)
         
         # Add pages to stacked widget
         self.stacked_widget.addWidget(self.dashboard_page)      
