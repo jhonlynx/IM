@@ -17,6 +17,15 @@ class AddressRepository:
         conn.close()
         return address
     
+    def get_address_by_id(self, address_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM ADDRESS WHERE ID = %s;", (address_id,))
+        address = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return address
+    
     def create_address(self, address_name):
         conn = self.get_connection()
         cursor = conn.cursor()

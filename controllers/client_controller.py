@@ -4,6 +4,9 @@ class ClientController:
     def __init__(self):
         self.client_repo = ClientRepository()
 
+    def get_client_by_id(self, client_id):
+        return self.client_repo.get_client_by_id(client_id)
+
     def get_all_clients(self):
         return self.client_repo.get_all_clients()
 
@@ -15,6 +18,3 @@ class ClientController:
 
     def delete_client(self, client_id):
         return self.client_repo.delete_client(client_id)
-
-    def add_client(self):
-        return

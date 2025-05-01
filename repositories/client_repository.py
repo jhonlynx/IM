@@ -7,6 +7,18 @@ class ClientRepository:
 
     def get_connection(self):
         return self.db_connector.get_connection()
+    
+    def get_client_by_id(self, client_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM CLIENT WHERE ID = %s;",
+            (client_id,)
+        )
+        client = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return client
 
 
     def get_all_clients(self): 
