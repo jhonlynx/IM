@@ -21,7 +21,7 @@ class MeterRepository:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM METER WHERE ID = %s;",
+            "SELECT * FROM METER WHERE METER_ID = %s;",
             (meter_id,)
         )
         meter = cursor.fetchall()

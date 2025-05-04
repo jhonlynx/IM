@@ -294,71 +294,28 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         reading_date = QtWidgets.QDateEdit()
         reading_date.setCalendarPopup(True)
         reading_date.setStyleSheet(input_style)
+        reading_date.setMaximumDate(QtCore.QDate.currentDate())
 
         previous_reading = QtWidgets.QLineEdit()
-        previous_reading.setStyleSheet(input_style)
         previous_reading.setReadOnly(True)
         previous_reading.setStyleSheet(readonly_style)
 
         present_reading = QtWidgets.QLineEdit()
-        present_reading.setStyleSheet(input_style)
+        present_reading.setEnabled(False)
+        present_reading.setStyleSheet(readonly_style)
 
         cubic_meter_consumed = QtWidgets.QLineEdit()
-        cubic_meter_consumed.setStyleSheet(input_style)
         cubic_meter_consumed.setReadOnly(True)
         cubic_meter_consumed.setStyleSheet(readonly_style)
 
         amount = QtWidgets.QLineEdit()
-        amount.setStyleSheet(input_style)
         amount.setReadOnly(True)
         amount.setStyleSheet(readonly_style)
 
         due_date = QtWidgets.QDateEdit()
         due_date.setCalendarPopup(True)
         due_date.setStyleSheet(input_style)
-        
-
-
-        form_layout.addLayout(create_labeled_widget("CLIENT:", client), 0, 0)
-        form_layout.addLayout(create_labeled_widget("READING DATE:", reading_date), 1, 0)
-        form_layout.addLayout(create_labeled_widget("PREVIOUS READING:", previous_reading), 2, 0)
-        form_layout.addLayout(create_labeled_widget("PRESENT READING:", present_reading), 3, 0)
-        form_layout.addLayout(create_labeled_widget("CUBIC METER CONSUMED:", cubic_meter_consumed), 4, 0)
-        form_layout.addLayout(create_labeled_widget("AMOUNT:", amount), 5, 0)
-        form_layout.addLayout(create_labeled_widget("DUE DATE:", due_date), 6, 0)
-
-                
-        IadminPageBack = adminPageBack()
-
-        client.setEditable(True)
-        client.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
-        client.setStyleSheet(input_style)
-        client.lineEdit().setReadOnly(False)
-
-        client_entries = []
-        client_data_map = {}
-
-        clients = IadminPageBack.fetch_clients()
-        client.clear()
-
-        # Populate client ComboBox
-        for client_data in clients:
-            client_id = client_data[0]
-            client_number = client_data[1]
-            first_name = client_data[2]
-            last_name = client_data[4]
-            display_text = f"{client_number} - {first_name} {last_name}"
-            client.addItem(display_text, client_id)
-            client_entries.append(display_text)
-            client_data_map[display_text] = client_id
-
-        # ✅ Just use QCompleter
-        completer = QtWidgets.QCompleter(client_entries)
-        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        completer.setFilterMode(QtCore.Qt.MatchContains)
-        client.setCompleter(completer)
-
-
+        due_date.setMinimumDate(QtCore.QDate.currentDate())
 
         # Bold centered section header
         additional_charge_label = QtWidgets.QLabel("ADDITIONAL CHARGE")
@@ -438,6 +395,219 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         layout.addWidget(button_container)
+        
+
+
+        form_layout.addLayout(create_labeled_widget("CLIENT:", client), 0, 0)
+        form_layout.addLayout(create_labeled_widget("READING DATE:", reading_date), 1, 0)
+        form_layout.addLayout(create_labeled_widget("PREVIOUS READING:", previous_reading), 2, 0)
+        form_layout.addLayout(create_labeled_widget("PRESENT READING:", present_reading), 3, 0)
+        form_layout.addLayout(create_labeled_widget("CUBIC METER CONSUMED:", cubic_meter_consumed), 4, 0)
+        form_layout.addLayout(create_labeled_widget("AMOUNT:", amount), 5, 0)
+        form_layout.addLayout(create_labeled_widget("DUE DATE:", due_date), 6, 0)
+
+                
+        IadminPageBack = adminPageBack()
+
+        client.setEditable(True)
+        client.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        client.setStyleSheet(input_style)
+        client.lineEdit().setReadOnly(False)
+
+        client_entries = []
+        client_data_map = {}
+
+        clients = IadminPageBack.fetch_clients()
+        client.clear()
+
+        # Populate client ComboBox
+        for client_data in clients:
+            client_id = client_data[0]
+            client_number = client_data[1]
+            first_name = client_data[2]
+            last_name = client_data[4]
+            display_text = f"{client_number} - {first_name} {last_name}"
+            client.addItem(display_text, client_id)
+            client_entries.append(display_text)
+            client_data_map[display_text] = client_id
+
+        #Completer for client ComboBox
+        completer = QtWidgets.QCompleter(client_entries)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer.setFilterMode(QtCore.Qt.MatchContains)
+        client.setCompleter(completer)
+
+        def update_total_bill():
+            try:
+                amt = float(amount.text()) if amount.text() else 0
+                charge = float(total_charge.text()) if total_charge.text() else 0
+                total = amt + charge
+                total_bill.setText(f"{total:.2f}")
+            except ValueError:
+                total_bill.setText("0.00")
+
+        #connect signal to handle selection changes
+        def on_client_selected(index):
+            selected_id = client.itemData(index)
+            if selected_id is None:
+                present_reading.setEnabled(False)
+                present_reading.setStyleSheet(readonly_style)
+                return
+            IadminPageBack = adminPageBack()
+            client_info = IadminPageBack.fetch_client_by_id(selected_id)[0] # get client info by id
+            meter_id = client_info[5] # meter id
+            client_categ_id = client_info[7] # category id
+            previous_reading.setText(str(IadminPageBack.fetch_meter_by_id(meter_id)[0][1])) # get previous reading from meter id
+            # Fetch rate blocks
+            #self.rate_blocks = IadminPageBack.fetch_rate_blocks_by_categ(client_categ_id)
+            self.rate_blocks = [
+                    (123,True, 0, 10, None,111, 150.0),                # Minimum charge for 0–10 cu.m.
+                    (123,False, 10, 20, 16.50,111, None),                   # 11–20 cu.m.
+                    (123,False, 20, 30, 18.70,111, None),                   # 21–30 cu.m.
+                    (123,False, 30, 40, 21.70,111, None),                   # 31–40 cu.m.
+                    (123,False, 40, 50, 25.50,111, None),                   # 41–50 cu.m.
+                    (123,False, 50, None, 30.00,111, None),                 # 51+ cu.m.
+                ] # tanggala ning self.rate_blocks kung napagana na nimo ang kanang self.rate_blocks sa taas nga nigamit og IadminPageBack
+                # naka set up nasad ko didto og function para ana mao sad na nga ngalan palihug lang sad ko pasa og import sa repo ani than
+                # sa mga existing lang nga functions pag base dali raman to mura rag pasa pasa nmos repo og controller
+
+
+            # Store categ_id for use in bill creation
+            self.categ_id = client_categ_id
+            present_reading.setEnabled(True)
+            present_reading.setStyleSheet(input_style)
+            
+
+        client.currentIndexChanged.connect(on_client_selected)
+
+        def on_present_reading_changed():
+            try:
+                prev = float(previous_reading.text())
+                pres = float(present_reading.text())
+                if pres < prev:
+                    cubic_meter_consumed.setText("0")
+                    amount.setText("0.00")
+                    return
+
+                consumed = pres - prev
+                cubic_meter_consumed.setText(str(consumed))
+
+                total_amount = 0
+                has_applied_minimum = False
+
+                for block in self.rate_blocks:
+                    is_minimum = block[1]           # bool: True if it's the minimum block
+                    min_c = block[2]                # min cubmic meter for this block (None if is_minimum)
+                    max_c = block[3] if block[3] is not None else float('inf') # max cubic meter for this block (None if is_minimum)
+                    rate = block[4]                 # rate per cu.m (None if is_nimum)
+                    fixed_fee = block[6]            # fixed fee for is_minimum (None if not is_minimum)
+
+                    if is_minimum and consumed > 0 and not has_applied_minimum:
+                        total_amount += fixed_fee
+                        has_applied_minimum = True
+
+                    elif not is_minimum and consumed > min_c:
+                        applied_volume = max(0, min(consumed, max_c) - min_c)
+                        total_amount += applied_volume * rate
+
+                amount.setText(f"{total_amount:.2f}")
+                update_total_bill()
+
+            except ValueError:
+                cubic_meter_consumed.setText("0")
+                amount.setText("0.00")
+
+        present_reading.textChanged.connect(on_present_reading_changed)
+
+        def update_total_charge():
+            try:
+                sub = float(subscribe_capital.text()) if subscribe_capital.text() else 0
+                late = float(late_payment.text()) if late_payment.text() else 0
+                pen = float(penalty.text()) if penalty.text() else 0
+                total = sub + late + pen
+                total_charge.setText(f"{total:.2f}")
+                update_total_bill()
+            except ValueError:
+                total_charge.setText("0.00")
+        
+        subscribe_capital.textChanged.connect(update_total_charge)
+        late_payment.textChanged.connect(update_total_charge)
+        penalty.textChanged.connect(update_total_charge)
+
+        def save_bill():
+            try:
+                #backend style
+                #kung kani imo gamiton make sure lang sad nga dapat masave sila tulo dungan walay usa ma fail
+                # akong paabot sat ulo kay ang create reading, create billing, update meter sa iyang reading og last reading date
+                client_id = client.currentData()  # get selected client_id from comboBox
+                prev_read = float(previous_reading.text())
+                pres_read = float(present_reading.text())
+                read_date = reading_date.date().toPyDate()
+                meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
+
+                #reading_id = IadminPageBack.add_reading(meter_id, prev_read, pres_read, read_date) # uncomment ig ready, himog add reading nga function nya e return ang reading id, paki edit nlng pd sa adminback para matest nmo
+                #IadminPageBack.update_meter_latest_reading(meter_id, prev_read, read_date) # uncomment sad ig ready, bali maupdate ang last reading sa meter og ang last reading date
+                billing_data = {
+                    "billing_due": due_date.date().toPyDate(),
+                    "billing_total": float(total_bill.text()) if total_bill.text() else 0,
+                    "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
+                    "reading_id": None, # ilisi ang none og reading id kung successfully maka create na
+                    "client_id": client_id,
+                    "categ_id": self.categ_id,
+                    "billing_date": read_date,
+                    "billing_status": "TO BE PRINTED",
+                    "billing_amount": float(amount.text()) if amount.text() else 0,
+                    "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
+                    "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
+                    "billing_penalty": float(penalty.text()) if penalty.text() else 0,
+                    "billing_extra_charge": float(total_charge.text()) if total_charge.text() else 0
+                }
+
+                print("READY TO SAVE:", billing_data) # testing rani para check if naget ba ang tanan
+                #IadminPageBack.add_billing(billing_data) # tanggala ang comment kung ready na ang billing repo
+
+
+                QtWidgets.QMessageBox.information(dialog, "Success", "Billing information saved successfully.")
+                dialog.accept()
+
+                #database style
+                client_id = client.currentData()  # get selected client_id from comboBox
+                prev_read = float(previous_reading.text())
+                pres_read = float(present_reading.text())
+                read_date = reading_date.date().toPyDate()
+                meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
+
+                billing_data = {
+                    "billing_due": due_date.date().toPyDate(),
+                    "billing_total": float(total_bill.text()) if total_bill.text() else 0,
+                    "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
+                    "reading_id": reading_id,
+                    "client_id": client_id,
+                    "categ_id": self.categ_id,
+                    "billing_date": read_date,
+                    "billing_status": "TO BE PRINTED",
+                    "billing_amount": float(amount.text()) if amount.text() else 0,
+                    "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
+                    "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
+                    "billing_penalty": float(penalty.text()) if penalty.text() else 0,
+                    "billing_extra_charge": float(total_charge.text()) if total_charge.text() else 0,
+                    "meter_id": meter_id
+                }
+
+                #IadminPageBack.add_billing(billing_data) # tanggala ang comment kung ready na ang billing repo
+                # if di diay mogana og pasa ang dictionary pakibungkag nalang sad ig pasa para matest nmo if niganang crud
+                # kung kani na method imo gamiton kay ang mahitabo kay mag create usa og reading before mag create og billing
+                # tapos kahuman ana if success gani ang duha e update ang last reading og reading date sa meter
+                # rollback kung naay bisag usa nga na fail hahaha else commit
+
+            except Exception as e:
+                QtWidgets.QMessageBox.warning(dialog, "Error", f"Failed to save billing: {str(e)}")
+
+        save_btn.clicked.connect(save_bill)
+
+        
+        
+
 
         dialog.exec_() 
 

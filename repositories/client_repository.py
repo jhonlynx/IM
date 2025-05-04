@@ -12,7 +12,7 @@ class ClientRepository:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM CLIENT WHERE ID = %s;",
+            "SELECT * FROM CLIENT WHERE CLIENT_ID = %s;",
             (client_id,)
         )
         client = cursor.fetchall()
