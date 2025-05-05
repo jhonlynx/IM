@@ -18,6 +18,17 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
 
+        # Define input style at the beginning
+        input_style = """
+            QLineEdit, QComboBox {
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family: 'Roboto', sans-serif;
+                min-width: 250px;
+            }
+        """
+
         # Header with title and search
         header_layout = QtWidgets.QHBoxLayout()
         title = QtWidgets.QLabel("BILLING LIST")
@@ -47,39 +58,16 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                 min-width: 120px;
                 background-color: white;
             }
-            QComboBox::drop-down {
-                border: none;
-            }
-            QComboBox::down-arrow {
-                image: url(images/dropdown.png);
-                width: 12px;
-                height: 12px;
-            }
         """)
         search_container.addWidget(self.search_criteria)
         
         # Search input
         self.search_input = QtWidgets.QLineEdit()
         self.search_input.setPlaceholderText("Search billings...")
-        
-        # Apply same styling to both widgets
-        input_style = """
-            QLineEdit, QComboBox {
-                padding: 8px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                font-family: 'Roboto', sans-serif;
-                min-width: 250px;
-            }
-        """
         self.search_input.setStyleSheet(input_style)
-        
-        self.search_input.textChanged.connect(self.filter_table)
-        
-        # Add widgets to container
         search_container.addWidget(self.search_input)
         
-        
+        # Add search container to search_add_layout
         search_add_layout.addLayout(search_container)
         
         # Add button with icon
@@ -96,16 +84,14 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                 background-color: rgb(200, 100, 100);
             }
         """)
-        # add_btn.clicked.connect(self.show_add_billing)
         add_btn.clicked.connect(self.show_add_billing)
         search_add_layout.addWidget(add_btn)
         
+        # Add search_add_layout to header_layout
         header_layout.addLayout(search_add_layout)
-        layout.addLayout(header_layout)  
-
-
-
-        # Billing Table
+        layout.addLayout(header_layout)
+        
+        # Create billing table before accessing it
         self.billing_table = QtWidgets.QTableWidget()
         self.billing_table.setAlternatingRowColors(True)
         self.billing_table.setStyleSheet("""
@@ -125,7 +111,6 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         """)
         
         # Set up table columns
-        # In setup_ui() method, update the following lines:
         self.billing_table.setColumnCount(8)
         self.billing_table.setHorizontalHeaderLabels([
             "BILLING CODE", "ISSUED DATE", "BILLING DUE", "CLIENT ID", 
@@ -137,8 +122,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         
         self.populate_table(data)
 
-        
-        # Adjust table properties
+        # Now we can safely adjust table properties
         self.billing_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.billing_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.billing_table.verticalHeader().setVisible(False)
@@ -207,7 +191,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         for row in range(self.billing_table.rowCount()):
             match = False
             if search_text:
-                if search_by == "BILLING ID":
+                if search_by == "BILLING CODE":
                     item = self.billing_table.item(row, 0)
                 elif search_by == "CLIENT ID":
                     item = self.billing_table.item(row, 3)
@@ -298,6 +282,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         reading_date.setCalendarPopup(True)
         reading_date.setStyleSheet(input_style)
         reading_date.setMaximumDate(QtCore.QDate.currentDate())
+        reading_date.setDate(QtCore.QDate.currentDate())  # Set current date as default
 
         previous_reading = QtWidgets.QLineEdit()
         previous_reading.setReadOnly(True)
@@ -440,6 +425,8 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         completer.setFilterMode(QtCore.Qt.MatchContains)
         client.setCompleter(completer)
 
+        client.setCurrentText("Select Client")
+
         def update_total_bill():
             try:
                 amt = float(amount.text()) if amount.text() else 0
@@ -537,69 +524,156 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         late_payment.textChanged.connect(update_total_charge)
         penalty.textChanged.connect(update_total_charge)
 
+        def validate_billing_data():
+                error_style = """
+                    QLineEdit, QDateEdit, QComboBox {
+                        padding: 8px;
+                        border: 1px solid red;
+                        border-radius: 4px;
+                        font-family: 'Roboto', sans-serif;
+                        min-width: 250px;
+                    }
+                """
+                normal_style = input_style
+                errors = []
+                has_empty_fields = False
+                
+                # Reset all styles
+                for widget in [client, reading_date, present_reading, due_date, 
+                              subscribe_capital, late_payment, penalty]:
+                    widget.setStyleSheet(normal_style)
+                
+                # Check for empty fields first
+                if client.currentData() is None:
+                    client.setStyleSheet(error_style)
+                    has_empty_fields = True
+                
+                if not present_reading.text().strip():
+                    present_reading.setStyleSheet(error_style)
+                    has_empty_fields = True
+                
+                for field in [subscribe_capital, late_payment, penalty]:
+                    if not field.text().strip():
+                        field.setStyleSheet(error_style)
+                        has_empty_fields = True
+                
+                if has_empty_fields:
+                    msg = QtWidgets.QMessageBox(dialog)
+                    msg.setWindowTitle("Validation Error")
+                    msg.setText("All fields are needed to be filled")
+                    msg.setIcon(QtWidgets.QMessageBox.Warning)
+                    msg.setStyleSheet("QMessageBox { background-color: white; }")
+                    msg.exec_()
+                    return False
+                
+                # Continue with other validations only if no empty fields
+                try:
+                    prev = float(previous_reading.text() or 0)
+                    pres = float(present_reading.text() or 0)
+                    if pres <= prev:
+                        present_reading.setStyleSheet(error_style)
+                        errors.append("\nPresent reading must be greater than previous reading\n")
+                except ValueError:
+                    present_reading.setStyleSheet(error_style)
+                    errors.append("\nInvalid present reading value\n")
+                
+                if reading_date.date() > QtCore.QDate.currentDate():
+                    reading_date.setStyleSheet(error_style)
+                    errors.append("\nReading date cannot be in the future\n")
+                
+                if due_date.date() <= reading_date.date():
+                    due_date.setStyleSheet(error_style)
+                    errors.append("\nDue date must be after reading date\n")
+                
+                # Additional charges validation for non-empty fields
+                for field, field_name in [(subscribe_capital, "Subscribe Capital"), 
+                                        (late_payment, "Late Payment"), 
+                                        (penalty, "Penalty")]:
+                    try:
+                        value = float(field.text())
+                        if value < 0:
+                            field.setStyleSheet(error_style)
+                            errors.append(f"\n{field_name} cannot be negative\n")
+                    except ValueError:
+                        field.setStyleSheet(error_style)
+                        errors.append(f"\nInvalid {field_name} amount\n")
+                
+                if errors:
+                    msg = QtWidgets.QMessageBox(dialog)
+                    msg.setWindowTitle("Validation Error")
+                    msg.setText("\n\n".join(errors))
+                    msg.setIcon(QtWidgets.QMessageBox.Warning)
+                    msg.setStyleSheet("QMessageBox { background-color: white; }")
+                    msg.exec_()
+                    return False
+                return True
+
         def save_bill():
-            try:
-                #backend style
-                #kung kani imo gamiton make sure lang sad nga dapat masave sila tulo dungan walay usa ma fail
-                # akong paabot sat ulo kay ang create reading, create billing, update meter sa iyang reading og last reading date
-                client_id = client.currentData()  # get selected client_id from comboBox
-                prev_read = float(previous_reading.text())
-                pres_read = float(present_reading.text())
-                read_date = reading_date.date().toPyDate()
-                meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
+                try:
+                    if not validate_billing_data():
+                        return
+                    
+                    #backend style
+                    #kung kani imo gamiton make sure lang sad nga dapat masave sila tulo dungan walay usa ma fail
+                    # akong paabot sat ulo kay ang create reading, create billing, update meter sa iyang reading og last reading date
+                    client_id = client.currentData()  # get selected client_id from comboBox
+                    prev_read = float(previous_reading.text())
+                    pres_read = float(present_reading.text())
+                    read_date = reading_date.date().toPyDate()
+                    meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
 
-                reading_id = IadminPageBack.add_reading(read_date, prev_read, pres_read, meter_id) # uncomment ig ready, himog add reading nga function nya e return ang reading id, paki edit nlng pd sa adminback para matest nmo
-                IadminPageBack.update_meter_latest_reading(pres_read, read_date, meter_id) # uncomment sad ig ready, bali maupdate ang last reading sa meter og ang last reading date
-                billing_data = {
-                    "billing_due": due_date.date().toPyDate(),
-                    "billing_total": float(total_bill.text()) if total_bill.text() else 0,
-                    "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
-                    "reading_id": reading_id, # ilisi ang none og reading id kung successfully maka create na
-                    "client_id": client_id,
-                    "categ_id": self.categ_id,
-                    "billing_date": read_date,
-                    "billing_status": "TO BE PRINTED",
-                    "billing_amount": float(amount.text()) if amount.text() else 0,
-                    "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
-                    "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
-                    "billing_penalty": float(penalty.text()) if penalty.text() else 0,
-                    "billing_total_charge": float(total_charge.text()) if total_charge.text() else 0
-                }
+                    reading_id = IadminPageBack.add_reading(read_date, prev_read, pres_read, meter_id) # uncomment ig ready, himog add reading nga function nya e return ang reading id, paki edit nlng pd sa adminback para matest nmo
+                    IadminPageBack.update_meter_latest_reading(pres_read, read_date, meter_id) # uncomment sad ig ready, bali maupdate ang last reading sa meter og ang last reading date
+                    billing_data = {
+                        "billing_due": due_date.date().toPyDate(),
+                        "billing_total": float(total_bill.text()) if total_bill.text() else 0,
+                        "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
+                        "reading_id": reading_id, # ilisi ang none og reading id kung successfully maka create na
+                        "client_id": client_id,
+                        "categ_id": self.categ_id,
+                        "billing_date": read_date,
+                        "billing_status": "TO BE PRINTED",
+                        "billing_amount": float(amount.text()) if amount.text() else 0,
+                        "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
+                        "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
+                        "billing_penalty": float(penalty.text()) if penalty.text() else 0,
+                        "billing_total_charge": float(total_charge.text()) if total_charge.text() else 0
+                    }
 
-                print("READY TO SAVE:", billing_data) # testing rani para check if naget ba ang tanan
-                print(pres_read)
-                IadminPageBack.add_billing(billing_data['billing_due'],
-                                        billing_data['billing_total'],
-                                        billing_data['billing_consumption'],
-                                        billing_data['reading_id'],
-                                        billing_data['client_id'],
-                                        billing_data['categ_id'],
-                                        billing_data['billing_date'],
-                                        billing_data['billing_status'],
-                                        billing_data['billing_amount'],
-                                        billing_data['billing_sub_capital'],
-                                        billing_data['billing_late_payment'],
-                                        billing_data['billing_penalty'],
-                                        billing_data['billing_total_charge'],) # tanggala ang comment kung ready na ang billing repo
-
-
-                QtWidgets.QMessageBox.information(dialog, "Success", "Billing information saved successfully.")
-                dialog.accept()
-                updated_data = IadminPageBack.fetch_billing()
-                self.populate_table(updated_data)
+                    print("READY TO SAVE:", billing_data) # testing rani para check if naget ba ang tanan
+                    print(pres_read)
+                    IadminPageBack.add_billing(billing_data['billing_due'],
+                                            billing_data['billing_total'],
+                                            billing_data['billing_consumption'],
+                                            billing_data['reading_id'],
+                                            billing_data['client_id'],
+                                            billing_data['categ_id'],
+                                            billing_data['billing_date'],
+                                            billing_data['billing_status'],
+                                            billing_data['billing_amount'],
+                                            billing_data['billing_sub_capital'],
+                                            billing_data['billing_late_payment'],
+                                            billing_data['billing_penalty'],
+                                            billing_data['billing_total_charge'],) # tanggala ang comment kung ready na ang billing repo
 
 
-            except Exception as e:
-                QtWidgets.QMessageBox.warning(dialog, "Error", f"Failed to save billing: {str(e)}")
+                    QtWidgets.QMessageBox.information(dialog, "Success", "Billing information saved successfully.")
+                    dialog.accept()
+                    updated_data = IadminPageBack.fetch_billing()
+                    self.populate_table(updated_data)
+
+
+                except Exception as e:
+                    QtWidgets.QMessageBox.warning(dialog, "Error", f"Failed to save billing: {str(e)}")
 
         save_btn.clicked.connect(save_bill)
 
-        
-        
+            
+            
 
 
         dialog.exec_()
-    
+        
 
           
 
