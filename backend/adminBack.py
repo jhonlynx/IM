@@ -4,6 +4,7 @@ from repositories.billing_repository import BillingRepository
 from repositories.address_repository import AddressRepository
 from repositories.category_repository import CategoryRepository
 from repositories.meter_repository import MeterRepository
+from repositories.reading_repository import ReadingRepository
 
 
 
@@ -24,9 +25,34 @@ class adminPageBack:
         billing_repository = BillingRepository()
         return billing_repository.get_all_billing()
     
-    def add_billing(self, billing_data):
+    def add_billing(self, billing_due, 
+                       billing_total, 
+                       billing_consumption, 
+                       reading_id, 
+                       client_id, 
+                       categ_id, 
+                       billing_date,  
+                       billing_status, 
+                       billing_amount, 
+                       billing_sub_capital,
+                       billing_late_payment, 
+                       billing_penalty, 
+                       billing_total_charge):
         billing_repository = BillingRepository()
-        return billing_repository.create_billing(billing_data)#adjusta ang imo billing repo kay ang akong gipasa dictionary nalang 
+        return billing_repository.create_billing( 
+                       billing_due, 
+                       billing_total, 
+                       billing_consumption, 
+                       reading_id, 
+                       client_id, 
+                       categ_id, 
+                       billing_date,  
+                       billing_status, 
+                       billing_amount, 
+                       billing_sub_capital,
+                       billing_late_payment, 
+                       billing_penalty, 
+                       billing_total_charge)#adjusta ang imo billing repo kay ang akong gipasa dictionary nalang 
                                                              #or if mas dalian ka usba ang akoa bungkaga and dictionary ig pasa(taas na kaayong code)
     
 
@@ -47,9 +73,9 @@ class adminPageBack:
         address_repository = AddressRepository()
         return address_repository.get_address()
     
-    def add_reading(self, meter_id, prev_read, pres_read, read_date):
-        #paimportn lng kos repo
-        return # wala pay function, e implement sa repository
+    def add_reading(self, read_date, prev_read, pres_read, meter_id):
+        reading_repository = ReadingRepository()
+        return reading_repository.create_reading(read_date, prev_read, pres_read, meter_id)
     
     #meters
     def add_meter(self, meter_last_reading, serial_number):
@@ -60,9 +86,9 @@ class adminPageBack:
         meter_repository = MeterRepository()
         return meter_repository.get_meter_by_id(meter_id)
     
-    def update_meter_latest_reading(self, meter_id, meter_last_reading, last_reading_date):
+    def update_meter_latest_reading(self, pres_read, read_date, meter_id):
         meter_repository = MeterRepository()
-        return # wala pay function, e implement sa repository
+        return meter_repository.update_meter(pres_read, read_date, meter_id)
     
     def fetch_rate_blocks_by_categ(self, categ_id):
         #butngi lang pd logic ari than base lang sa taas para testing

@@ -18,13 +18,39 @@ class BillingRepository:
         return bill
     
     
-    def create_billing(self, billing_due, billing_total, billing_consumption, reading_id, client_id, categ_id, billing_date):
+    def create_billing(self, 
+                       billing_due, 
+                       billing_total, 
+                       billing_consumption, 
+                       reading_id, 
+                       client_id, 
+                       categ_id, 
+                       billing_date, 
+                       billing_status, 
+                       billing_amount, 
+                       billing_sub_capital,
+                       billing_late_payment, 
+                       billing_penalty, 
+                       billing_total_charge
+                       ):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO BILLING (BILLING_DUE, BILLING_TOTAL, BILLING_CONSUMPTION, READING_ID, CLIENT_ID, CATEG_ID, BILLING_DATE) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING BILLING_ID;",
-            (billing_due, billing_total, billing_consumption, reading_id, client_id, categ_id, billing_date)
+            "INSERT INTO BILLING (BILLING_DUE, BILLING_TOTAL, BILLING_CONSUMPTION, READING_ID, CLIENT_ID, CATEG_ID, BILLING_DATE, BILLING_STATUS, BILLING_AMOUNT, BILLING_SUB_CAPITAL, BILLING_LATE_PAYMENT, BILLING_PENALTY, BILLING_TOTAL_CHARGE)"
+            "VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s, %s) RETURNING BILLING_ID;",
+            (          billing_due, 
+                       billing_total, 
+                       billing_consumption, 
+                       reading_id, 
+                       client_id, 
+                       categ_id, 
+                       billing_date,  
+                       billing_status, 
+                       billing_amount, 
+                       billing_sub_capital,
+                       billing_late_payment, 
+                       billing_penalty, 
+                       billing_total_charge)
         )
         new_bill = cursor.fetchone()[0]
         conn.commit()

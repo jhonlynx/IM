@@ -545,13 +545,13 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                 read_date = reading_date.date().toPyDate()
                 meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
 
-                #reading_id = IadminPageBack.add_reading(meter_id, prev_read, pres_read, read_date) # uncomment ig ready, himog add reading nga function nya e return ang reading id, paki edit nlng pd sa adminback para matest nmo
-                #IadminPageBack.update_meter_latest_reading(meter_id, prev_read, read_date) # uncomment sad ig ready, bali maupdate ang last reading sa meter og ang last reading date
+                reading_id = IadminPageBack.add_reading(read_date, prev_read, pres_read, meter_id) # uncomment ig ready, himog add reading nga function nya e return ang reading id, paki edit nlng pd sa adminback para matest nmo
+                IadminPageBack.update_meter_latest_reading(pres_read, read_date, meter_id) # uncomment sad ig ready, bali maupdate ang last reading sa meter og ang last reading date
                 billing_data = {
                     "billing_due": due_date.date().toPyDate(),
                     "billing_total": float(total_bill.text()) if total_bill.text() else 0,
                     "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
-                    "reading_id": None, # ilisi ang none og reading id kung successfully maka create na
+                    "reading_id": reading_id, # ilisi ang none og reading id kung successfully maka create na
                     "client_id": client_id,
                     "categ_id": self.categ_id,
                     "billing_date": read_date,
@@ -560,45 +560,31 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                     "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
                     "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
                     "billing_penalty": float(penalty.text()) if penalty.text() else 0,
-                    "billing_extra_charge": float(total_charge.text()) if total_charge.text() else 0
+                    "billing_total_charge": float(total_charge.text()) if total_charge.text() else 0
                 }
 
                 print("READY TO SAVE:", billing_data) # testing rani para check if naget ba ang tanan
-                #IadminPageBack.add_billing(billing_data) # tanggala ang comment kung ready na ang billing repo
+                print(pres_read)
+                IadminPageBack.add_billing(billing_data['billing_due'],
+                                        billing_data['billing_total'],
+                                        billing_data['billing_consumption'],
+                                        billing_data['reading_id'],
+                                        billing_data['client_id'],
+                                        billing_data['categ_id'],
+                                        billing_data['billing_date'],
+                                        billing_data['billing_status'],
+                                        billing_data['billing_amount'],
+                                        billing_data['billing_sub_capital'],
+                                        billing_data['billing_late_payment'],
+                                        billing_data['billing_penalty'],
+                                        billing_data['billing_total_charge'],) # tanggala ang comment kung ready na ang billing repo
 
 
                 QtWidgets.QMessageBox.information(dialog, "Success", "Billing information saved successfully.")
                 dialog.accept()
+                updated_data = IadminPageBack.fetch_billing()
+                self.populate_table(updated_data)
 
-                #database style
-                client_id = client.currentData()  # get selected client_id from comboBox
-                prev_read = float(previous_reading.text())
-                pres_read = float(present_reading.text())
-                read_date = reading_date.date().toPyDate()
-                meter_id = IadminPageBack.fetch_client_by_id(client_id)[0][5]  # get meter id from client id
-
-                billing_data = {
-                    "billing_due": due_date.date().toPyDate(),
-                    "billing_total": float(total_bill.text()) if total_bill.text() else 0,
-                    "billing_consumption": float(cubic_meter_consumed.text()) if cubic_meter_consumed.text() else 0,
-                    "reading_id": reading_id,
-                    "client_id": client_id,
-                    "categ_id": self.categ_id,
-                    "billing_date": read_date,
-                    "billing_status": "TO BE PRINTED",
-                    "billing_amount": float(amount.text()) if amount.text() else 0,
-                    "billing_sub_capital": float(subscribe_capital.text()) if subscribe_capital.text() else 0,
-                    "billing_late_payment": float(late_payment.text()) if late_payment.text() else 0,
-                    "billing_penalty": float(penalty.text()) if penalty.text() else 0,
-                    "billing_extra_charge": float(total_charge.text()) if total_charge.text() else 0,
-                    "meter_id": meter_id
-                }
-
-                #IadminPageBack.add_billing(billing_data) # tanggala ang comment kung ready na ang billing repo
-                # if di diay mogana og pasa ang dictionary pakibungkag nalang sad ig pasa para matest nmo if niganang crud
-                # kung kani na method imo gamiton kay ang mahitabo kay mag create usa og reading before mag create og billing
-                # tapos kahuman ana if success gani ang duha e update ang last reading og reading date sa meter
-                # rollback kung naay bisag usa nga na fail hahaha else commit
 
             except Exception as e:
                 QtWidgets.QMessageBox.warning(dialog, "Error", f"Failed to save billing: {str(e)}")
