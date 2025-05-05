@@ -95,14 +95,14 @@ class TransactionsPage(QtWidgets.QWidget):
 
         # Sample data combining daily and monthly transactions
         all_data = [
-            ("TR001", "2025-05-04", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "COMPLETED"),
+            ("TR001", "2025-05-04", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "PAID"),
             ("TR002", "2025-05-04", "13001", "jhon", "raymond", "67.00", "890", "2023-10-15", "PENDING"),
-            ("TR003", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "FAILED"),
-            ("TR004", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2025-05-04", "FAILED"),
-            ("TR005", "2023-10-15", "13001", "jhon", "raymond", "67.00", "890", "2025-05-04", "PENDING"),
-            ("TR006", "2023-10-15", "13001", "jhon", "raymond", "67.00", "890", "2025-05-04", "FAILED"),
+            ("TR003", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "PAID"),
+            ("TR004", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2025-05-04", "PENDING"),
+            ("TR005", "2023-10-15", "13001", "jhon", "raymond", "67.00", "890", "2025-05-04", "PAID"),
+            ("TR006", "2023-10-15", "13001", "jhon", "raymond", "67.00", "890", "2025-05-04", "PENDING"),
             ("TR007", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2025-05-04", "PENDING"),
-            ("TR008", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "COMPLETED"),
+            ("TR008", "2023-10-15", "13001", "jhon", "raymond", "67.00", "980", "2023-10-15", "PAID"),
         ]
 
         self.populate_table(self.transactions_table, all_data)
@@ -138,16 +138,45 @@ class TransactionsPage(QtWidgets.QWidget):
     def populate_table(self, table, data):
         table.setRowCount(len(data))
         for row, row_data in enumerate(data):
-            for col, text in enumerate(row_data):
+            for col, text in enumerate(row_data[:-1]):  # Exclude STATUS (col 8) for now
                 item = QtWidgets.QTableWidgetItem(text.strip() if isinstance(text, str) else text)
                 table.setItem(row, col, item)
-            status_item = QtWidgets.QTableWidgetItem(row_data[8])
-            status_item.setForeground(
-                QtGui.QColor("#4CAF50") if row_data[8] == "COMPLETED"
-                else QtGui.QColor("#FFA726") if row_data[8] == "PENDING"
-                else QtGui.QColor("#E57373")
-            )
-            table.setItem(row, 8, status_item)
+
+            # Create a container with status label + toggle button
+            status_layout = QtWidgets.QHBoxLayout()
+            status_layout.setContentsMargins(5, 0, 5, 0)
+
+            # Status label
+            status_label = QtWidgets.QLabel(row_data[8])
+            status_label.setStyleSheet(f"color: {'#4CAF50' if row_data[8] == 'PAID' else '#E57373'}; font-weight: bold;")
+
+            # Toggle button
+            toggle_button = QtWidgets.QPushButton()
+            toggle_button.setCheckable(True)
+            toggle_button.setChecked(row_data[8] == "PAID")
+            toggle_button.setFixedSize(40, 20)
+            toggle_button.setStyleSheet("""
+                QPushButton {
+                    background-color: red;
+                    border: 1px solid #aaa;
+                    border-radius: 10px;
+                }
+                QPushButton:checked {
+                    background-color: green;
+                }
+            """)
+            toggle_button.clicked.connect(lambda checked, r=row, lbl=status_label: self.toggle_status(r, lbl))
+
+            # Add label and button to layout
+            status_layout.addWidget(status_label)
+            status_layout.addStretch()
+            status_layout.addWidget(toggle_button)
+
+            # Set the layout into a QWidget
+            status_container = QtWidgets.QWidget()
+            status_container.setLayout(status_layout)
+            table.setCellWidget(row, 8, status_container)
+
 
     def switch_table(self, index):
         self.filter_table()
@@ -209,6 +238,23 @@ class TransactionsPage(QtWidgets.QWidget):
                     match_type = (row_date.month() == today.month() and row_date.year() == today.year())
 
             table.setRowHidden(row, not (match_search and match_type))
+
+    def toggle_status(self, row, label):
+        table = self.transactions_table
+        container = table.cellWidget(row, 8)
+        if container:
+            toggle_button = container.findChild(QtWidgets.QPushButton)
+            if toggle_button:
+                if toggle_button.isChecked():
+                    label.setText("PAID")
+                    label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                else:
+                    label.setText("PENDING")
+                    label.setStyleSheet("color: #E57373; font-weight: bold;")
+
+
+
+            
 
 
 if __name__ == "__main__":

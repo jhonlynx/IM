@@ -156,7 +156,6 @@ class AdminCustomersPage(QtWidgets.QWidget):
         self.customers_table.setRowCount(len(data))
         
         for row, customer in enumerate(data):
-            # Unpack all values (now expecting 11 values in the customer tuple)
             client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status = customer
 
             # Add customer data to the table
@@ -169,40 +168,43 @@ class AdminCustomersPage(QtWidgets.QWidget):
             self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(categ_name))
             self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(address_id))
             self.customers_table.setItem(row, 8, QtWidgets.QTableWidgetItem(location))
-            self.customers_table.setItem(row, 9, QtWidgets.QTableWidgetItem(status))
 
-            # Status with color coding
-            status_item = QtWidgets.QTableWidgetItem(status)
-            status_item.setForeground(
-                QtGui.QColor("#64B5F6") if status == "Active" else QtGui.QColor("#E57373")
-            )
-            self.customers_table.setItem(row, 9, status_item)
+            # Create status layout with label + toggle button
+            status_layout = QtWidgets.QHBoxLayout()
+            status_layout.setContentsMargins(5, 0, 5, 0)
 
-            # # Action buttons
-            # actions_widget = QtWidgets.QWidget()
-            # actions_layout = QtWidgets.QHBoxLayout(actions_widget)
-            # actions_layout.setContentsMargins(4, 4, 4, 4)
-            
-            # edit_btn = QtWidgets.QPushButton(icon=QtGui.QIcon("images/edit.png"))
-            # delete_btn = QtWidgets.QPushButton(icon=QtGui.QIcon("images/delete.png"))
-            
-            # edit_btn.setIconSize(QtCore.QSize(24, 24))
-            # delete_btn.setIconSize(QtCore.QSize(24, 24))
-            
-            # for btn in [edit_btn, delete_btn]:
-            #     btn.setStyleSheet("""
-            #         QPushButton {
-            #             padding: 5px 10px;
-            #             border: none;
-            #             border-radius: 4px;
-            #         }
-            #         QPushButton:hover {
-            #             background-color: #f0f0f0;
-            #         }
-            #     """)
-            #     actions_layout.addWidget(btn)
-            
-            # self.customers_table.setCellWidget(row, 11, actions_widget)  # Place action buttons in the 11th column
+            # Status label
+            status_label = QtWidgets.QLabel(status)
+            status_label.setStyleSheet(f"color: {'#4CAF50' if status == 'Active' else '#E57373'}; font-weight: bold;")
+
+            # Toggle button for status
+            toggle_button = QtWidgets.QPushButton()
+            toggle_button.setCheckable(True)
+            toggle_button.setChecked(status == "Active")
+            toggle_button.setFixedSize(40, 20)
+            toggle_button.setStyleSheet("""
+                QPushButton {
+                    background-color: red;
+                    border: 1px solid #aaa;
+                    border-radius: 10px;
+                }
+                QPushButton:checked {
+                    background-color: green;
+                }
+            """)
+            toggle_button.clicked.connect(lambda checked, r=row, lbl=status_label: self.toggle_status(r, lbl))
+
+            # Add label and button to layout
+            status_layout.addWidget(status_label)
+            status_layout.addStretch()
+            status_layout.addWidget(toggle_button)
+
+            # Set the layout into a QWidget
+            status_container = QtWidgets.QWidget()
+            status_container.setLayout(status_layout)
+            self.customers_table.setCellWidget(row, 9, status_container)
+
+
 
     def filter_table(self):
         search_by = self.search_criteria.currentText()
@@ -418,7 +420,21 @@ class AdminCustomersPage(QtWidgets.QWidget):
                 self.search_input_combo.show()
             else:
                 self.search_input.show()
-                self.search_input_combo.hide()           
+                self.search_input_combo.hide() 
+
+    def toggle_status(self, row, label):
+        table = self.customers_table
+        container = table.cellWidget(row, 9)
+        if container:
+            toggle_button = container.findChild(QtWidgets.QPushButton)
+            if toggle_button:
+                if toggle_button.isChecked():
+                    label.setText("Active")
+                    label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                else:
+                    label.setText("Inactive")
+                    label.setStyleSheet("color: #E57373; font-weight: bold;")
+                      
 
 
 if __name__ == "__main__":
