@@ -125,9 +125,11 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         """)
         
         # Set up table columns
+        # In setup_ui() method, update the following lines:
         self.billing_table.setColumnCount(8)
         self.billing_table.setHorizontalHeaderLabels([
-            "BILLING CODE", "ISSUED DATE", "BILLING DUE", "CLIENT ID", "CLIENT NAME", "CLIENT LOCATION", "BILLING TOTAL", "STATUS"
+            "BILLING CODE", "ISSUED DATE", "BILLING DUE", "CLIENT ID", 
+            "CLIENT NAME", "CLIENT LOCATION", "BILLING TOTAL", "STATUS"
         ])
 
         billing_back = adminPageBack()
@@ -168,6 +170,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                 QtGui.QColor("#64B5F6") if status == "PAID" else QtGui.QColor("#E57373")
             )
             self.billing_table.setItem(row, 7, status_item)
+
 
 
 
@@ -595,7 +598,8 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         
 
 
-        dialog.exec_() 
+        dialog.exec_()
+    
 
           
 
