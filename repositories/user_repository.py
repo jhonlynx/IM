@@ -67,14 +67,14 @@ class UserRepository:
             if 'conn' in locals():
                 conn.close()
     
-    def create_user(self, username, password, role, name, status):
+    def create_user(self, username, password, role, name, user_status):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO your_table_name (USERNAME, PASSWORD, ROLE, NAME, USER_STATUS)
+            INSERT INTO USERS (USERNAME, PASSWORD, ROLE, NAME, USER_STATUS)
             VALUES (%s, %s, %s, %s, %s)
             RETURNING _ID;
-        """, (username, password, role, name, status))
+        """, (username, password, role, name, user_status))
         new_id = cursor.fetchone()
         conn.commit()
         cursor.close()
@@ -82,37 +82,14 @@ class UserRepository:
         return new_id
 
 
-    def update_user(self, user_id, username, password, role, user_status):
+    def update_user(self, username, password, role, name, user_status):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
-        user = cursor.fetchone()
-
-        if user:
-            cursor.execute("UPDATE USERS SET USERNAME = %s, PASSWORD = %s, ROLE = %s, STATUS  = %s WHERE USER_ID = %s;",
-                (username, password, role, user_id, user_status))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-        else:
-            cursor.close()
-            conn.close()
-            return False
-
-    # def delete_user(self, user_id):
-    #     conn = self.get_connection()
-    #     cursor = conn.cursor()
-    #     cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
-    #     user = cursor.fetchone()
-
-    #     if user:
-    #         cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
-    #         conn.commit()
-    #         cursor.close()
-    #         conn.close()
-    #         return True
-    #     else:
-    #         cursor.close()
-    #         conn.close()
-    #         return False
+        cursor.execute("""
+            UPDATE USERS 
+            SET USERNAME = %s, PASSWORD = %s, role = %s, name = %s, user_status = %s 
+            WHERE METER_ID = %s
+        """, (username, password, role, name, user_status))
+        conn.commit()
+        cursor.close()
+        conn.close()

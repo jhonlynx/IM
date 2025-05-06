@@ -61,20 +61,3 @@ class MeterRepository:
         conn.commit()
         cursor.close()
         conn.close()
-
-    def delete_user(self, user_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
-        user = cursor.fetchone()
-
-        if user:
-            cursor.execute("DELETE FROM USERS WHERE USER_ID = %s;", (user_id,))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-        else:
-            cursor.close()
-            conn.close()
-            return False

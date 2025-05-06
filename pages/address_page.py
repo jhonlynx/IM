@@ -147,7 +147,7 @@ class AddressPage(QtWidgets.QWidget):
             status_container = QtWidgets.QWidget()
             status_container.setLayout(status_layout)
             self.address_table.setCellWidget(row, 2, status_container)
-
+            
     def toggle_search_input(self, text):
             if text == "Category":
                 self.search_input.hide()

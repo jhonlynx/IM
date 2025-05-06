@@ -1,21 +1,21 @@
 import psycopg2
 from database.Database import DBConnector
 
-class ReadingRepository:
+class RateBlockRepository:
     def __init__(self):
         self.db_connector = DBConnector()
 
     def get_connection(self):
         return self.db_connector.get_connection()
 
-    def get_all_reading(self):
+    def get_rate_block(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM READING;")
-        readings = cursor.fetchall()
+        cursor.execute("SELECT * FROM RATEBLOCK;")
+        rateblock = cursor.fetchall()
         cursor.close()
         conn.close()
-        return readings
+        return rateblock
     
     def get_reading_by_id(self, reading_id):
         conn = self.get_connection()
