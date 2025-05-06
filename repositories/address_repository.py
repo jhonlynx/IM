@@ -20,7 +20,7 @@ class AddressRepository:
     def get_address_by_id(self, address_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM ADDRESS WHERE ID = %s;", (address_id,))
+        cursor.execute("SELECT * FROM ADDRESS WHERE ADDRESS_ID = %s;", (address_id,))
         address = cursor.fetchone()
         cursor.close()
         conn.close()

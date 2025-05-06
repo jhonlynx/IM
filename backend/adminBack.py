@@ -73,6 +73,14 @@ class adminPageBack:
         address_repository = AddressRepository()
         return address_repository.get_address()
     
+    def get_address_by_id(self, id):
+        address_repository = AddressRepository()
+        return address_repository.get_address_by_id(id)
+    
+    def toggle_address_status(self, id):
+        address_repository = AddressRepository()
+        return
+    
     def add_reading(self, read_date, prev_read, pres_read, meter_id):
         reading_repository = ReadingRepository()
         return reading_repository.create_reading(read_date, prev_read, pres_read, meter_id)
