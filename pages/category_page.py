@@ -107,10 +107,9 @@ class CategoryPage(QtWidgets.QWidget):
             "NAME", "DATE", "STATUS", "ACTION"
         ])
         
-        category_back = adminPageBack()
-        data = category_back.fetch_categories()
+        IadminPageBack = adminPageBack()
         
-        self.populate_table(data)
+        self.populate_table(IadminPageBack.fetch_categories)
         
         # Adjust table properties
         self.categorys_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
@@ -143,6 +142,8 @@ class CategoryPage(QtWidgets.QWidget):
             toggle_button.setCheckable(True)
             toggle_button.setChecked(category_status == "Active")
             toggle_button.setFixedSize(40, 20)
+            toggle_button.setProperty("category_id", category_id)
+
             toggle_button.setStyleSheet("""
                 QPushButton {
                     background-color: red;
@@ -457,38 +458,37 @@ class CategoryPage(QtWidgets.QWidget):
         if container:
             toggle_button = container.findChild(QtWidgets.QPushButton)
             if toggle_button:
-                # Store the current status before the button toggles
-                current_status = toggle_button.isChecked()
-                next_status = not current_status
-                next_status_label = "Active" if next_status else "Inactive"
+                category_id = toggle_button.property("category_id")
+                IadminPageBack = adminPageBack()
+                category_info = IadminPageBack.get_address_by_id(category_id)
+                current_status = category_info[2]  # 'Active' or 'Inactive'
+                next_status = 'Inactive' if current_status == 'Active' else 'Active'
 
-                # Block the toggle signal to prevent automatic state change
+                # Block toggle auto-switch
                 toggle_button.blockSignals(True)
 
-                # Ask for confirmation
                 reply = QMessageBox.question(
                     self,
                     "Confirm Status Change",
-                    f"Are you sure you want to change the status to {next_status_label}?",
+                    f"Are you sure you want to change the status to {next_status}?",
                     QMessageBox.Yes | QMessageBox.No
                 )
 
                 if reply == QMessageBox.Yes:
-                    # Change the status and apply label styles
-                    toggle_button.setChecked(next_status)
-                    if next_status:
-                        label.setText("Active")
-                        label.setStyleSheet("color: #4CAF50; font-weight: bold;")
-                    else:
-                        label.setText("Inactive")
-                        label.setStyleSheet("color: #E57373; font-weight: bold;")
+                    # Update DB
+                    IadminPageBack.toggle_address_status(category_id, next_status)
+                    # Update label and toggle state
+                    label.setText(next_status)
+                    label.setStyleSheet(f"color: {'#4CAF50' if next_status == 'Active' else '#E57373'}; font-weight: bold;")
+                    toggle_button.setChecked(next_status == "Active")
+
+                    
                 else:
-                    # Revert the button's checked state to the original state
+                    #keep original state
                     toggle_button.setChecked(current_status)
 
-                # Re-enable the signal after handling
                 toggle_button.blockSignals(False)
-                     
+
 
 
 if __name__ == "__main__":

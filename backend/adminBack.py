@@ -69,6 +69,14 @@ class adminPageBack:
         category_repository = CategoryRepository()
         return category_repository.get_category()
     
+    def get_category_by_id(self, id):
+        category_repository = CategoryRepository()
+        return category_repository.get_category_by_id(id)
+    
+    def toggle_category_status(self, id, status):
+        category_repository = CategoryRepository()
+        return 
+    
     def fetch_address(self):
         address_repository = AddressRepository()
         return address_repository.get_address()

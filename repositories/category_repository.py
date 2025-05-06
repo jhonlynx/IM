@@ -21,7 +21,7 @@ class CategoryRepository:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM CATEGORY WHERE ID = %s;",
+            "SELECT * FROM CATEGORY WHERE CATEG_ID = %s;",
             (categ_id,)
         )
         category = cursor.fetchall()
