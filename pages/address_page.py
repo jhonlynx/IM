@@ -360,7 +360,6 @@ class AddressPage(QtWidgets.QWidget):
                 f"Are you sure you want to deactivate address ID {address_id}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
-    
 
     def toggle_search_input(self, text):
             if text == "Category":

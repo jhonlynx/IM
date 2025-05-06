@@ -79,35 +79,14 @@ class ClientRepository:
         return new_id
 
 
-    def update_client(self, client_id, client_name,client_mname, client_lname, client_contact_num, payment_id, address_id, categ_id):
+    def update_client(self, client_id, client_name, client_lname, client_contact_num, client_location, client_mname, client_status):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM CLIENT WHERE CLIENT_ID = %s;", (client_id,))
-        client = cursor.fetchone()
-        if client:
-            cursor.execute("UPDATE CLIENT SET CLIENT_NAME = %s, CLIENT_MNAME = %s, CLIENT_LNAME = %s, CLIENT_CONTACT_NUM = %s, PAYMENT_ID = %s, ADDRESS_ID = %s, CATEG_ID = %s WHERE CLIENT_ID = %s;",
-                           (client_name, client_lname, client_mname, client_contact_num, payment_id, address_id, categ_id, client_id))
-            conn.commit()
-            success = True
-        else:
-            success = False
+        cursor.execute("""
+            UPDATE CLIENT 
+            SET CLIENT_NAME = %s, CLIENT_LNAME = %s, CLIENT_CONTACT_NUM = %s, CLIENT_LOCATION = %s, CLIENT_MNAME = %s, CLIENT_STATUS = %s 
+            WHERE CLIENT_ID = %s
+        """, (client_id, client_name, client_lname, client_contact_num, client_location, client_mname, client_status))
+        conn.commit()
         cursor.close()
         conn.close()
-        return success
-
-    def delete_client(self, client_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM CLIENT WHERE CLIENT_ID = %s;", (client_id,))
-        client = cursor.fetchone()
-
-        if client:
-            cursor.execute("DELETE FROM CLIENT WHERE CLIENT_ID = %s;", (client_id,))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return True
-        else:
-            cursor.close()
-            conn.close()
-            return False
