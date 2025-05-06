@@ -36,8 +36,8 @@ class BillingRepository:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO BILLING (BILLING_DUE, BILLING_TOTAL, BILLING_CONSUMPTION, READING_ID, CLIENT_ID, CATEG_ID, BILLING_DATE, BILLING_STATUS, BILLING_AMOUNT, BILLING_SUB_CAPITAL, BILLING_LATE_PAYMENT, BILLING_PENALTY, BILLING_TOTAL_CHARGE)"
-            "VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s, %s) RETURNING BILLING_ID;",
+            "INSERT INTO BILLING (BILLING_DUE, BILLING_TOTAL, BILLING_CONSUMPTION, READING_ID, CLIENT_ID, CATEG_ID, BILLING_DATE, BILLING_CODE, BILLING_STATUS, BILLING_AMOUNT, BILLING_SUB_CAPITAL, BILLING_LATE_PAYMENT, BILLING_PENALTY, BILLING_TOTAL_CHARGE)"
+            "VALUES (%s, %s, %s, %s, %s, %s,%s, 'BCODE-' || LPAD(nextval('billing_code_seq')::text, 5, '0'),  %s, %s, %s, %s, %s, %s) RETURNING BILLING_ID, BILLING_CODE;",
             (          billing_due, 
                        billing_total, 
                        billing_consumption, 
@@ -52,11 +52,12 @@ class BillingRepository:
                        billing_penalty, 
                        billing_total_charge)
         )
-        new_bill = cursor.fetchone()[0]
+        new_bill_id, new_bill_code = cursor.fetchone()
         conn.commit()
         cursor.close()
         conn.close()
-        return new_bill
+        return new_bill_id, new_bill_code
+
     
     def get_all_billing(self):
         try:
@@ -67,6 +68,7 @@ class BillingRepository:
                             b.billing_total, b.billing_status
                 FROM BILLING b
                 JOIN CLIENT c ON b.client_id = c.client_id
+                ORDER BY BILLING_CODE ASC
             """)
 
             billings = cursor.fetchall()

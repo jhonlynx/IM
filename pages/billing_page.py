@@ -283,6 +283,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         reading_date.setStyleSheet(input_style)
         reading_date.setMaximumDate(QtCore.QDate.currentDate())
         reading_date.setDate(QtCore.QDate.currentDate())  # Set current date as default
+         
 
         previous_reading = QtWidgets.QLineEdit()
         previous_reading.setReadOnly(True)
@@ -429,12 +430,17 @@ class EmployeeBillingPage(QtWidgets.QWidget):
 
         def update_total_bill():
             try:
-                amt = float(amount.text()) if amount.text() else 0
-                charge = float(total_charge.text()) if total_charge.text() else 0
+                amt_text = amount.text().strip()
+                charge_text = total_charge.text().strip()
+
+                amt = float(amt_text) if amt_text else 0
+                charge = float(charge_text) if charge_text else 0
+
                 total = amt + charge
                 total_bill.setText(f"{total:.2f}")
             except ValueError:
                 total_bill.setText("0.00")
+
 
         #connect signal to handle selection changes
         def on_client_selected(index):
@@ -609,9 +615,9 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                 return True
 
         def save_bill():
-                try:
-                    if not validate_billing_data():
+                if not validate_billing_data():
                         return
+                try:
                     
                     #backend style
                     #kung kani imo gamiton make sure lang sad nga dapat masave sila tulo dungan walay usa ma fail
@@ -662,7 +668,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
                     updated_data = IadminPageBack.fetch_billing()
                     self.populate_table(updated_data)
 
-
+                #maka update bisag error
                 except Exception as e:
                     QtWidgets.QMessageBox.warning(dialog, "Error", f"Failed to save billing: {str(e)}")
 

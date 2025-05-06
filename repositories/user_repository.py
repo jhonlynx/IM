@@ -67,26 +67,30 @@ class UserRepository:
             if 'conn' in locals():
                 conn.close()
     
-    def create_user(self, username, password, role, name):
+    def create_user(self, username, password, role, name, status):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO  (USERNAME, PASSWORD, ROLE, NAME) VALUES (%s, %s, %s, %s) RETURNING _ID;",
-                       (username, password, role, name))
+        cursor.execute("""
+            INSERT INTO your_table_name (USERNAME, PASSWORD, ROLE, NAME, USER_STATUS)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING _ID;
+        """, (username, password, role, name, status))
         new_id = cursor.fetchone()
         conn.commit()
         cursor.close()
         conn.close()
         return new_id
 
-    def update_user(self, user_id, username, password, role):
+
+    def update_user(self, user_id, username, password, role, user_status):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM USERS WHERE USER_ID = %s;", (user_id,))
         user = cursor.fetchone()
 
         if user:
-            cursor.execute("UPDATE USERS SET USERNAME = %s, PASSWORD = %s, ROLE = %s WHERE USER_ID = %s;",
-                (username, password, role, user_id))
+            cursor.execute("UPDATE USERS SET USERNAME = %s, PASSWORD = %s, ROLE = %s, STATUS  = %s WHERE USER_ID = %s;",
+                (username, password, role, user_id, user_status))
             conn.commit()
             cursor.close()
             conn.close()

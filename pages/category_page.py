@@ -1,3 +1,5 @@
+#on and off status
+
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -97,10 +99,11 @@ class CategoryPage(QtWidgets.QWidget):
         self.categorys_table.setRowCount(len(data))
 
         for row, category in enumerate(data):
-            category_id, category_name = category
+            category_id, category_name, category_status = category
 
             self.categorys_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(category_id)))
-            self.categorys_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(category_name)))
+            self.categorys_table.setItem(row, 1, QtWidgets.QTableWidgetItem(category_name))
+            self.categorys_table.setItem(row, 1, QtWidgets.QTableWidgetItem(category_status))
 
             # Action widget with deactivate and edit buttons
             actions_widget = QtWidgets.QWidget()
