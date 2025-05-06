@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from backend.adminBack import adminPageBack
 
@@ -29,27 +30,35 @@ class AddressPage(QtWidgets.QWidget):
         header_layout.addWidget(title)
         header_layout.addStretch()
 
-        # Search and Add button container
-        add_layout = QtWidgets.QHBoxLayout() 
+        search_add_layout = QtWidgets.QHBoxLayout()
         
-        # Add button with icon
-        add_btn = QtWidgets.QPushButton("ADD ADDRESS", icon=QtGui.QIcon("images/add.png"))
-        add_btn.setStyleSheet("""
-            QPushButton {
-                background-color: rgb(229, 115, 115);
-                color: white;
-                padding: 8px 15px;
+        # Search container
+        search_container = QtWidgets.QHBoxLayout()
+        
+        # Search input
+        self.search_input = QtWidgets.QLineEdit()
+        self.search_input.setPlaceholderText("Search address by name...")
+        
+        # Apply same styling to both widgets
+        input_style = """
+            QLineEdit {
+                padding: 8px;
+                border: 1px solid #ccc;
                 border-radius: 4px;
                 font-family: 'Roboto', sans-serif;
+                min-width: 250px;
             }
-            QPushButton:hover {
-                background-color: rgb(200, 100, 100);
-            }
-        """)
-        add_btn.clicked.connect(self.show_add_address_page)
-        add_layout.addWidget(add_btn)
+        """
+        self.search_input.setStyleSheet(input_style)
+
+        self.search_input.textChanged.connect(self.filter_table)
         
-        header_layout.addLayout(add_layout)
+        # Add widgets to container
+        search_container.addWidget(self.search_input)
+
+        search_add_layout.addLayout(search_container)
+        
+        header_layout.addLayout(search_add_layout)
         layout.addLayout(header_layout)
 
 
@@ -76,7 +85,7 @@ class AddressPage(QtWidgets.QWidget):
         self.address_table.setColumnCount(3)
         self.address_table.verticalHeader().setVisible(False)
         self.address_table.setHorizontalHeaderLabels([
-            "ID", "NAME", "ACTION"
+            "NAME", "DATE", "STATUS"
         ])
         
         address_back = adminPageBack()
@@ -97,56 +106,47 @@ class AddressPage(QtWidgets.QWidget):
         self.address_table.setRowCount(len(data))
 
         for row, address in enumerate(data):
-            address_id, address_name = address
+            address_id, address_name, address_status, address_date = address
 
-            self.address_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(address_id)))
-            self.address_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(address_name)))
+            self.address_table.setItem(row, 0, QtWidgets.QTableWidgetItem(address_name))
+            self.address_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(address_date)))
 
-            # Action widget with deactivate and edit buttons
-            actions_widget = QtWidgets.QWidget()
-            actions_layout = QtWidgets.QHBoxLayout(actions_widget)
-            actions_layout.setContentsMargins(0, 0, 0, 0)
-            actions_layout.setSpacing(30)
-            actions_layout.setAlignment(QtCore.Qt.AlignCenter)
+             # Create status layout with label + toggle button
+            status_layout = QtWidgets.QHBoxLayout()
+            status_layout.setContentsMargins(5, 0, 5, 0)
 
-            # Deactivate button
-            deactivate_btn = QtWidgets.QPushButton(icon=QtGui.QIcon("images/delete.png"))
-            deactivate_btn.setIconSize(QtCore.QSize(24, 24))
-            deactivate_btn.setStyleSheet("""
+            # Status label
+            status_label = QtWidgets.QLabel(address_status)
+            status_label.setStyleSheet(f"color: {'#4CAF50' if address_status == 'Active' else '#E57373'}; font-weight: bold;")
+
+            # Toggle button for status
+            toggle_button = QtWidgets.QPushButton()
+            toggle_button.setCheckable(True)
+            toggle_button.setChecked(address_status == "Active")
+            toggle_button.setFixedSize(40, 20)
+            toggle_button.setStyleSheet("""
                 QPushButton {
-                    padding: 5px;
-                    border: none;
-                    border-radius: 4px;
+                    background-color: red;
+                    border: 1px solid #aaa;
+                    border-radius: 10px;
                 }
-                QPushButton:hover {
-                    background-color: #fff0e0;
+                QPushButton:checked {
+                    background-color: green;
                 }
             """)
-            deactivate_btn.clicked.connect(lambda _, row=row: self.deactivate_address(row))
+            toggle_button.pressed.connect(lambda r=row, lbl=status_label: self.toggle_status(r, lbl))
 
-            # Edit button
-            edit_btn = QtWidgets.QPushButton(icon=QtGui.QIcon("images/edit.png"))
-            edit_btn.setIconSize(QtCore.QSize(24, 24))
-            edit_btn.setStyleSheet("""
-                QPushButton {
-                    padding: 5px;
-                    border: none;
-                    border-radius: 4px;
-                }
-                QPushButton:hover {
-                    background-color: #f0f0f0;
-                }
-            """)
-            edit_btn.clicked.connect(lambda _, row=row: self.show_edit_address_page(row))
+            # Add label and button to layout
+            status_layout.addWidget(status_label)
+            status_layout.addStretch()
+            status_layout.addWidget(toggle_button)
 
-            actions_layout.addWidget(deactivate_btn)
-            actions_layout.addWidget(edit_btn)
-            self.address_table.setCellWidget(row, 2, actions_widget)
-
+            # Set the layout into a QWidget
+            status_container = QtWidgets.QWidget()
+            status_container.setLayout(status_layout)
+            self.address_table.setCellWidget(row, 2, status_container)
 
  
-
-
     def show_add_address_page(self):
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle("New Address")
@@ -368,7 +368,57 @@ class AddressPage(QtWidgets.QWidget):
                 self.search_input_combo.show()
             else:
                 self.search_input.show()
-                self.search_input_combo.hide()           
+                self.search_input_combo.hide() 
+
+    def filter_table(self, text):
+        # Filter rows based on the search text
+        for row in range(self.address_table.rowCount()):
+            item = self.address_table.item(row, 0)  # Look at the 'NAME' column (index 1)
+            if item:
+                address_name = item.text().lower()
+                if text.lower() in address_name:
+                    self.address_table.setRowHidden(row, False)  # Show row if name matches
+                else:
+                    self.address_table.setRowHidden(row, True)  # Hide row if name doesn't match
+                
+
+    def toggle_status(self, row, label):
+        table = self.address_table
+        container = table.cellWidget(row, 2)
+        if container:
+            toggle_button = container.findChild(QtWidgets.QPushButton)
+            if toggle_button:
+                # Store the current status before the button toggles
+                current_status = toggle_button.isChecked()
+                next_status = not current_status
+                next_status_label = "Active" if next_status else "Inactive"
+
+                # Block the toggle signal to prevent automatic state change
+                toggle_button.blockSignals(True)
+
+                # Ask for confirmation
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Status Change",
+                    f"Are you sure you want to change the status to {next_status_label}?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+
+                if reply == QMessageBox.Yes:
+                    # Change the status and apply label styles
+                    toggle_button.setChecked(next_status)
+                    if next_status:
+                        label.setText("Active")
+                        label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                    else:
+                        label.setText("Inactive")
+                        label.setStyleSheet("color: #E57373; font-weight: bold;")
+                else:
+                    # Revert the button's checked state to the original state
+                    toggle_button.setChecked(current_status)
+
+                # Re-enable the signal after handling
+                toggle_button.blockSignals(False)                 
 
 
 if __name__ == "__main__":

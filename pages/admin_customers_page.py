@@ -131,10 +131,10 @@ class AdminCustomersPage(QtWidgets.QWidget):
 
         
         # Set up columns (10 columns)
-        self.customers_table.setColumnCount(10)
+        self.customers_table.setColumnCount(9)
         self.customers_table.verticalHeader().setVisible(False)
         self.customers_table.setHorizontalHeaderLabels([
-            "CLIENT ID", "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
+            "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
             "CATEGORY", "ADDRESS", "LOCATION", "STATUS"
         ])
         
@@ -159,15 +159,14 @@ class AdminCustomersPage(QtWidgets.QWidget):
             client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status = customer
 
             # Add customer data to the table
-            self.customers_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(client_id)))
-            self.customers_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(client_number)))
-            self.customers_table.setItem(row, 2, QtWidgets.QTableWidgetItem(fname))
-            self.customers_table.setItem(row, 3, QtWidgets.QTableWidgetItem(middle_name))
-            self.customers_table.setItem(row, 4, QtWidgets.QTableWidgetItem(lname))
-            self.customers_table.setItem(row, 5, QtWidgets.QTableWidgetItem(contact))
-            self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(categ_name))
-            self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(address_id))
-            self.customers_table.setItem(row, 8, QtWidgets.QTableWidgetItem(location))
+            self.customers_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(client_number)))
+            self.customers_table.setItem(row, 1, QtWidgets.QTableWidgetItem(fname))
+            self.customers_table.setItem(row, 2, QtWidgets.QTableWidgetItem(middle_name))
+            self.customers_table.setItem(row, 3, QtWidgets.QTableWidgetItem(lname))
+            self.customers_table.setItem(row, 4, QtWidgets.QTableWidgetItem(contact))
+            self.customers_table.setItem(row, 5, QtWidgets.QTableWidgetItem(categ_name))
+            self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(address_id))
+            self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(location))
 
             # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
@@ -202,7 +201,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
             # Set the layout into a QWidget
             status_container = QtWidgets.QWidget()
             status_container.setLayout(status_layout)
-            self.customers_table.setCellWidget(row, 9, status_container)
+            self.customers_table.setCellWidget(row, 8, status_container)
 
 
 
@@ -304,9 +303,9 @@ class AdminCustomersPage(QtWidgets.QWidget):
 
         # Fetch backend data
         IadminPageBack = adminPageBack()
-        for category_id, category_name in IadminPageBack.fetch_categories():
+        for category_id, category_name, category_status, category_date in IadminPageBack.fetch_categories():
             fields["Category"].addItem(category_name, category_id)
-        for address_id, address_name in IadminPageBack.fetch_address():
+        for address_id, address_name, address_status, address_date in IadminPageBack.fetch_address():
             fields["Address"].addItem(address_name, address_id)
 
         # Layout inputs in 2 columns
@@ -424,7 +423,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
 
     def toggle_status(self, row, label):
         table = self.customers_table
-        container = table.cellWidget(row, 9)
+        container = table.cellWidget(row, 8)
         if container:
             toggle_button = container.findChild(QtWidgets.QPushButton)
             if toggle_button:

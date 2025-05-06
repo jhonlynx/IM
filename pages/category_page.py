@@ -7,6 +7,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from backend.adminBack import adminPageBack
 
@@ -31,11 +32,36 @@ class CategoryPage(QtWidgets.QWidget):
         header_layout.addWidget(title)
         header_layout.addStretch()
 
-        # Search and Add button container
-        add_layout = QtWidgets.QHBoxLayout() 
+        search_add_layout = QtWidgets.QHBoxLayout()
+        
+        # Search container
+        search_container = QtWidgets.QHBoxLayout()
+        
+        # Search input
+        self.search_input = QtWidgets.QLineEdit()
+        self.search_input.setPlaceholderText("Search address by name...")
+        
+        # Apply same styling to both widgets
+        input_style = """
+            QLineEdit {
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family: 'Roboto', sans-serif;
+                min-width: 250px;
+            }
+        """
+        self.search_input.setStyleSheet(input_style)
+        self.search_input.textChanged.connect(self.filter_table)
+        
+        # Add widgets to container
+        search_container.addWidget(self.search_input)
+
+        search_add_layout.addLayout(search_container)
+        
         
         # Add button with icon
-        add_btn = QtWidgets.QPushButton("ADD CATEGORY", icon=QtGui.QIcon("images/add.png"))
+        add_btn = QtWidgets.QPushButton("ADD ADDRESS", icon=QtGui.QIcon("images/add.png"))
         add_btn.setStyleSheet("""
             QPushButton {
                 background-color: rgb(229, 115, 115);
@@ -49,9 +75,9 @@ class CategoryPage(QtWidgets.QWidget):
             }
         """)
         add_btn.clicked.connect(self.show_add_category_page)
-        add_layout.addWidget(add_btn)
+        search_add_layout.addWidget(add_btn)
         
-        header_layout.addLayout(add_layout)
+        header_layout.addLayout(search_add_layout)
         layout.addLayout(header_layout)
 
 
@@ -75,10 +101,10 @@ class CategoryPage(QtWidgets.QWidget):
         """)
         
         # Set up columns (10 columns)
-        self.categorys_table.setColumnCount(3)
+        self.categorys_table.setColumnCount(4)
         self.categorys_table.verticalHeader().setVisible(False)
         self.categorys_table.setHorizontalHeaderLabels([
-            "ID", "NAME", "ACTION"
+            "NAME", "DATE", "STATUS", "ACTION"
         ])
         
         category_back = adminPageBack()
@@ -99,11 +125,45 @@ class CategoryPage(QtWidgets.QWidget):
         self.categorys_table.setRowCount(len(data))
 
         for row, category in enumerate(data):
-            category_id, category_name, category_status = category
+            category_id, category_name, category_status, category_date  = category
 
-            self.categorys_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(category_id)))
-            self.categorys_table.setItem(row, 1, QtWidgets.QTableWidgetItem(category_name))
-            self.categorys_table.setItem(row, 1, QtWidgets.QTableWidgetItem(category_status))
+            self.categorys_table.setItem(row, 0, QtWidgets.QTableWidgetItem(category_name))
+            self.categorys_table.setItem(row,1, QtWidgets.QTableWidgetItem(str(category_date)))
+
+             # Create status layout with label + toggle button
+            status_layout = QtWidgets.QHBoxLayout()
+            status_layout.setContentsMargins(5, 0, 5, 0)
+
+            # Status label
+            status_label = QtWidgets.QLabel(category_status)
+            status_label.setStyleSheet(f"color: {'#4CAF50' if category_status == 'Active' else '#E57373'}; font-weight: bold;")
+
+            # Toggle button for status
+            toggle_button = QtWidgets.QPushButton()
+            toggle_button.setCheckable(True)
+            toggle_button.setChecked(category_status == "Active")
+            toggle_button.setFixedSize(40, 20)
+            toggle_button.setStyleSheet("""
+                QPushButton {
+                    background-color: red;
+                    border: 1px solid #aaa;
+                    border-radius: 10px;
+                }
+                QPushButton:checked {
+                    background-color: green;
+                }
+            """)
+            toggle_button.pressed.connect(lambda r=row, lbl=status_label: self.toggle_status(r, lbl))
+
+            # Add label and button to layout
+            status_layout.addWidget(status_label)
+            status_layout.addStretch()
+            status_layout.addWidget(toggle_button)
+
+            # Set the layout into a QWidget
+            status_container = QtWidgets.QWidget()
+            status_container.setLayout(status_layout)
+            self.categorys_table.setCellWidget(row, 2, status_container)
 
             # Action widget with deactivate and edit buttons
             actions_widget = QtWidgets.QWidget()
@@ -144,7 +204,7 @@ class CategoryPage(QtWidgets.QWidget):
 
             actions_layout.addWidget(deactivate_btn)
             actions_layout.addWidget(edit_btn)
-            self.categorys_table.setCellWidget(row, 2, actions_widget)
+            self.categorys_table.setCellWidget(row, 3, actions_widget)
  
 
 
@@ -255,8 +315,7 @@ class CategoryPage(QtWidgets.QWidget):
 
 
     def show_edit_category_page(self, row):
-        category_id = self.categorys_table.item(row, 0).text()
-        current_name = self.categorys_table.item(row, 1).text()
+        current_name = self.categorys_table.item(row, 0).text()
 
         edit_dialog = QtWidgets.QDialog(self)
         edit_dialog.setWindowTitle("Edit Category")
@@ -366,7 +425,7 @@ class CategoryPage(QtWidgets.QWidget):
 
         reply = QtWidgets.QMessageBox.question(
             self, 'Deactivate Category',
-            f"Are you sure you want to deactivate category ID {category_id}?",
+            f"Are you sure you want to deactivate category NAME {category_id}?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             QtWidgets.QMessageBox.No
         )  
@@ -379,7 +438,57 @@ class CategoryPage(QtWidgets.QWidget):
                 self.search_input_combo.show()
             else:
                 self.search_input.show()
-                self.search_input_combo.hide()           
+                self.search_input_combo.hide() 
+
+    def filter_table(self, text):
+        # Filter rows based on the search text
+        for row in range(self.categorys_table.rowCount()):
+            item = self.categorys_table.item(row, 0)  # Look at the 'NAME' column (index 1)
+            if item:
+                category_name = item.text().lower()
+                if text.lower() in category_name:
+                    self.categorys_table.setRowHidden(row, False)  # Show row if name matches
+                else:
+                    self.categorys_table.setRowHidden(row, True)  # Hide row if name doesn't match             
+
+    def toggle_status(self, row, label):
+        table = self.categorys_table
+        container = table.cellWidget(row, 2)
+        if container:
+            toggle_button = container.findChild(QtWidgets.QPushButton)
+            if toggle_button:
+                # Store the current status before the button toggles
+                current_status = toggle_button.isChecked()
+                next_status = not current_status
+                next_status_label = "Active" if next_status else "Inactive"
+
+                # Block the toggle signal to prevent automatic state change
+                toggle_button.blockSignals(True)
+
+                # Ask for confirmation
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Status Change",
+                    f"Are you sure you want to change the status to {next_status_label}?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+
+                if reply == QMessageBox.Yes:
+                    # Change the status and apply label styles
+                    toggle_button.setChecked(next_status)
+                    if next_status:
+                        label.setText("Active")
+                        label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                    else:
+                        label.setText("Inactive")
+                        label.setStyleSheet("color: #E57373; font-weight: bold;")
+                else:
+                    # Revert the button's checked state to the original state
+                    toggle_button.setChecked(current_status)
+
+                # Re-enable the signal after handling
+                toggle_button.blockSignals(False)
+                     
 
 
 if __name__ == "__main__":

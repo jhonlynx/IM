@@ -215,10 +215,17 @@ class AdminWorkersPage(QtWidgets.QWidget):
         password_input.setEchoMode(QtWidgets.QLineEdit.Password)
         password_input.setStyleSheet(input_style)
 
+        conmfirmpassword_input = QtWidgets.QLineEdit()
+        conmfirmpassword_input.setEchoMode(QtWidgets.QLineEdit.Password)
+        conmfirmpassword_input.setStyleSheet(input_style)
+
         # Layout with labeled inputs
         form_layout.addLayout(create_labeled_widget("NAME:", name_input), 0, 0)
         form_layout.addLayout(create_labeled_widget("USERNAME:", username_input), 1, 0)
         form_layout.addLayout(create_labeled_widget("PASSWORD:", password_input), 2, 0)
+        form_layout.addLayout(create_labeled_widget("CONFIRM PASSWORD:", conmfirmpassword_input), 3, 0)
+
+        
 
         layout.addLayout(form_layout)
 
