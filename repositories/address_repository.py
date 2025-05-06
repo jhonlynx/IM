@@ -26,13 +26,12 @@ class AddressRepository:
         conn.close()
         return address
     
-    def toggle_status(self, address_status, address_id):
+    def toggle_status(self, address_id, address_status):
         conn = self.get_connection()
         cursor = conn.cursor()
-        status_str = 'Active' if address_status else 'Inactive'
         cursor.execute(
-            "UPDATE USERS SET ADDRESS_STATUS = %s WHERE ADDRESS_ID = %s",
-            (status_str, address_id)
+            "UPDATE ADDRESS SET ADDRESS_STATUS = %s WHERE ADDRESS_ID = %s",
+            (address_status, address_id)
         )
         conn.commit()
         cursor.close()

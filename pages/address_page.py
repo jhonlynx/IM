@@ -193,7 +193,7 @@ class AddressPage(QtWidgets.QWidget):
 
                 if reply == QMessageBox.Yes:
                     # Update DB
-                    IadminPageBack.update_address_status(address_id, next_status)
+                    IadminPageBack.toggle_address_status(address_id, next_status)
 
                     # Update label and toggle state
                     label.setText(next_status)
