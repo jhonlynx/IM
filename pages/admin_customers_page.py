@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from backend.adminBack import adminPageBack
 
@@ -13,6 +14,11 @@ class AdminCustomersPage(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.setup_ui()
+        self.setWindowTitle("SOWBASCO - Admin - Customer Page")
+        self.setMinimumSize(1200, 800)
+        self.showMaximized()
+        self.setWindowIcon(QtGui.QIcon("images/logosowbasco.png"))
+        
 
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
@@ -168,7 +174,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
             self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(address_id))
             self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(location))
 
-            # Create status layout with label + toggle button
+             # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
             status_layout.setContentsMargins(5, 0, 5, 0)
 
@@ -191,7 +197,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
                     background-color: green;
                 }
             """)
-            toggle_button.clicked.connect(lambda checked, r=row, lbl=status_label: self.toggle_status(r, lbl))
+            toggle_button.pressed.connect(lambda r=row, lbl=status_label: self.toggle_status(r, lbl))
 
             # Add label and button to layout
             status_layout.addWidget(status_label)
@@ -427,12 +433,37 @@ class AdminCustomersPage(QtWidgets.QWidget):
         if container:
             toggle_button = container.findChild(QtWidgets.QPushButton)
             if toggle_button:
-                if toggle_button.isChecked():
-                    label.setText("Active")
-                    label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                # Store the current status before the button toggles
+                current_status = toggle_button.isChecked()
+                next_status = not current_status
+                next_status_label = "Active" if next_status else "Inactive"
+
+                # Block the toggle signal to prevent automatic state change
+                toggle_button.blockSignals(True)
+
+                # Ask for confirmation
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Status Change",
+                    f"Are you sure you want to change the status to {next_status_label}?",
+                    QMessageBox.Yes | QMessageBox.No
+                )
+
+                if reply == QMessageBox.Yes:
+                    # Change the status and apply label styles
+                    toggle_button.setChecked(next_status)
+                    if next_status:
+                        label.setText("Active")
+                        label.setStyleSheet("color: #4CAF50; font-weight: bold;")
+                    else:
+                        label.setText("Inactive")
+                        label.setStyleSheet("color: #E57373; font-weight: bold;")
                 else:
-                    label.setText("Inactive")
-                    label.setStyleSheet("color: #E57373; font-weight: bold;")
+                    # Revert the button's checked state to the original state
+                    toggle_button.setChecked(current_status)
+
+                # Re-enable the signal after handling
+                toggle_button.blockSignals(False)
                       
 
 
