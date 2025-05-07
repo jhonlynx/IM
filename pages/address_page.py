@@ -91,8 +91,7 @@ class AddressPage(QtWidgets.QWidget):
         IadminPageBack = adminPageBack()
 
         
-        self.populate_table(IadminPageBack.fetch_address()
-)
+        self.populate_table(IadminPageBack.fetch_address())
         
         # Adjust table properties
         self.address_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)

@@ -109,7 +109,7 @@ class CategoryPage(QtWidgets.QWidget):
         
         IadminPageBack = adminPageBack()
         
-        self.populate_table(IadminPageBack.fetch_categories)
+        self.populate_table(IadminPageBack.fetch_categories())
         
         # Adjust table properties
         self.categorys_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
@@ -460,8 +460,8 @@ class CategoryPage(QtWidgets.QWidget):
             if toggle_button:
                 category_id = toggle_button.property("category_id")
                 IadminPageBack = adminPageBack()
-                category_info = IadminPageBack.get_address_by_id(category_id)
-                current_status = category_info[2]  # 'Active' or 'Inactive'
+                category_info = IadminPageBack.get_category_by_id(category_id)
+                current_status = category_info[0][2]  # 'Active' or 'Inactive 
                 next_status = 'Inactive' if current_status == 'Active' else 'Active'
 
                 # Block toggle auto-switch
