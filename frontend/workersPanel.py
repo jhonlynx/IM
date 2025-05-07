@@ -20,6 +20,7 @@ class WorkersPanel(QtWidgets.QMainWindow):
         self.setWindowTitle("SOWBASCO - Workers Panel")
         self.setMinimumSize(1200, 800)
         self.showMaximized()
+        self.setWindowIcon(QtGui.QIcon("images/logosowbasco.png"))
         
         # Main widget and layout setup
         self.central_widget = QtWidgets.QWidget()
@@ -34,8 +35,21 @@ class WorkersPanel(QtWidgets.QMainWindow):
         # Create stacked widget and header
         self.setup_main_content()
         
-        # Initialize pages
-        self.initialize_pages()
+        # Initialize pages dictionary to track loaded pages
+        self.pages = {}
+        self.page_indices = {
+            "Customers": 0,
+            "Categories": 1,
+            "Address": 2,
+            "Billing": 3,
+            "Transactions": 4
+        }
+        
+        # Create placeholder pages
+        self.create_placeholders()
+        
+        # Load only the customers page initially
+        self.load_page("Customers")
         
         # Set initial page
         self.stacked_widget.setCurrentIndex(0)
@@ -73,20 +87,57 @@ class WorkersPanel(QtWidgets.QMainWindow):
         
         self.main_layout.addWidget(container)
 
-    def initialize_pages(self):
-        # Initialize all pages
-        self.customers_page = EmployeeCustomersPage(self)
-        self.category_page = CategoryPage(self)
-        self.address_page = AddressPage(self)
-        self.billing_page = EmployeeBillingPage(self)
-        self.transactions_page = TransactionsPage(self)
+    def create_placeholders(self):
+        """Create placeholders for all pages to prevent UI glitches"""
+        for page_name in self.page_indices:
+            # Create a placeholder widget with white background
+            placeholder = QtWidgets.QWidget()
+            placeholder.setStyleSheet("background-color: white;")
+            
+            # Add placeholder to stacked widget
+            self.stacked_widget.addWidget(placeholder)
+
+    def load_page(self, page_name):
+        # If page is already loaded, just return its index
+        if page_name in self.pages:
+            return self.page_indices[page_name]
         
-        # Add pages to stacked widget     # Index 0
-        self.stacked_widget.addWidget(self.customers_page)     
-        self.stacked_widget.addWidget(self.category_page) 
-        self.stacked_widget.addWidget(self.address_page) 
-        self.stacked_widget.addWidget(self.billing_page)       
-        self.stacked_widget.addWidget(self.transactions_page)  
+        # Get the placeholder at the correct index
+        index = self.page_indices[page_name]
+        placeholder = self.stacked_widget.widget(index)
+            
+        # Use a QTimer to create a small delay before loading the actual page
+        # This allows the UI to update and show the placeholder first
+        QtCore.QTimer.singleShot(10, lambda: self._delayed_load_page(page_name, index, placeholder))
+            
+        return index
+        
+    def _delayed_load_page(self, page_name, index, placeholder):
+        """Actually load the page after a small delay"""
+        # Create the page
+        page = None
+        if page_name == "Customers":
+            page = EmployeeCustomersPage(self)
+        elif page_name == "Categories":
+            page = CategoryPage(self)
+        elif page_name == "Address":
+            page = AddressPage(self)
+        elif page_name == "Billing":
+            page = EmployeeBillingPage(self)
+        elif page_name == "Transactions":
+            page = TransactionsPage(self)
+        
+        if page:
+            # Replace the placeholder with the actual page
+            self.stacked_widget.removeWidget(placeholder)
+            self.stacked_widget.insertWidget(index, page)
+            self.stacked_widget.setCurrentIndex(index)
+            
+            # Save reference to page
+            self.pages[page_name] = page
+            
+            # Process events to ensure UI updates
+            QtWidgets.QApplication.processEvents()
 
     def setup_sidebar(self):
         sidebar = QtWidgets.QFrame()
@@ -165,7 +216,7 @@ class WorkersPanel(QtWidgets.QMainWindow):
         logout_btn = QtWidgets.QPushButton("Logout")
         logout_btn.setIcon(QtGui.QIcon("images/logout.png"))
         logout_btn.setIconSize(QtCore.QSize(50, 50))
-        logout_btn.clicked.connect(self.logout)  # Add this line
+        logout_btn.clicked.connect(self.logout)
         sidebar_layout.addWidget(logout_btn)
         
         self.main_layout.addWidget(sidebar)
@@ -178,7 +229,7 @@ class WorkersPanel(QtWidgets.QMainWindow):
         dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
         dialog.setStyleSheet("""
             QDialog {
-                background-color: #C9EBCB;  /* Changed to match the green theme */
+                background-color: #C9EBCB;
                 border-radius: 10px;
             }
             QLabel {
@@ -245,26 +296,21 @@ class WorkersPanel(QtWidgets.QMainWindow):
             self.login.show()
             self.close()
 
-
     def change_page(self, page_name):
         # Uncheck all buttons except the clicked one
         for btn in self.nav_buttons:
             if page_name not in btn.text():
                 btn.setChecked(False)
         
-        # Change stacked widget page
-        page_index = {
-            "Customers": 0,
-            "Categories": 1,
-            "Address": 2,
-            "Billing": 3,
-            "Transactions": 4
-        }
+        # Get the page index
+        page_index = self.page_indices[page_name]
         
-        if page_name in page_index:
-            self.stacked_widget.setCurrentIndex(page_index[page_name])   
-
-
+        # First switch to page index immediately to show placeholder
+        self.stacked_widget.setCurrentIndex(page_index)
+        
+        # Then load the actual page content if needed (in background)
+        if page_name not in self.pages:
+            QtCore.QTimer.singleShot(10, lambda: self.load_page(page_name))
 
 # Add this at the very end of the file:
 if __name__ == "__main__":
