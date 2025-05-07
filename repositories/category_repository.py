@@ -40,14 +40,14 @@ class CategoryRepository:
         conn.close()
         return new_id
     
-    def update_category(self, categ_name, categ_status):
+    def toggle_status_category(self, categ_id, categ_status):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE CATEGORY
-            SET CATEG_NAME = %s, CATEG_STATUS = %s 
+            SET CATEG_STATUS = %s 
             WHERE CATEG_ID = %s
-        """, (categ_name, categ_status))
+        """, (categ_status, categ_id))
         conn.commit()
         cursor.close()
         conn.close()

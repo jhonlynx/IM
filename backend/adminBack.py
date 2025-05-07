@@ -75,7 +75,7 @@ class adminPageBack:
     
     def toggle_category_status(self, id, status):
         category_repository = CategoryRepository()
-        return 
+        return category_repository.toggle_status_category(id, status)
     
     def fetch_address(self):
         address_repository = AddressRepository()

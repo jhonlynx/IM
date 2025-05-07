@@ -476,7 +476,7 @@ class CategoryPage(QtWidgets.QWidget):
 
                 if reply == QMessageBox.Yes:
                     # Update DB
-                    IadminPageBack.toggle_address_status(category_id, next_status)
+                    IadminPageBack.toggle_category_status(category_id, next_status)
                     # Update label and toggle state
                     label.setText(next_status)
                     label.setStyleSheet(f"color: {'#4CAF50' if next_status == 'Active' else '#E57373'}; font-weight: bold;")
