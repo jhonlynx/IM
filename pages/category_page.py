@@ -16,10 +16,6 @@ class CategoryPage(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.setup_ui()
-        self.setWindowTitle("SOWBASCO - Admin - Category Page")
-        self.setMinimumSize(1200, 800)
-        self.showMaximized()
-        self.setWindowIcon(QtGui.QIcon("images/logosowbasco.png"))
 
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
