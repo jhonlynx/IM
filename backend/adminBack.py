@@ -5,6 +5,7 @@ from repositories.address_repository import AddressRepository
 from repositories.category_repository import CategoryRepository
 from repositories.meter_repository import MeterRepository
 from repositories.reading_repository import ReadingRepository
+from repositories.transaction_repository import TransactionRepository
 
 
 
@@ -109,5 +110,9 @@ class adminPageBack:
     def fetch_rate_blocks_by_categ(self, categ_id):
         #butngi lang pd logic ari than base lang sa taas para testing
         return #aa
+    
+    def fetch_transactions(self):
+        transaction_reporsitory = TransactionRepository()
+        return transaction_reporsitory.get_all_transaction()
     
     

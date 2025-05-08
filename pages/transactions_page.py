@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PyQt5 import QtCore, QtGui, QtWidgets
+from backend.adminBack import adminPageBack
 
 
 class TransactionsPage(QtWidgets.QWidget):
@@ -138,19 +139,9 @@ class TransactionsPage(QtWidgets.QWidget):
         self.transaction_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.transaction_table.setWordWrap(False)
         
-        # Sample data combining daily and monthly transactions
-        sample_data = [
-            ("TR001", "2025-05-04", "13001", "jhon", "raymonddhdhdhyeexcvxvcxcvxcvxcvxvx", "67.00", "980", "2023-10-15", "PAID"),
-            ("TR002", "2025-05-04", "13001", "jhon", "raymonddhdhdhdh", "67.00", "890", "2023-10-15", "PENDING"),
-            ("TR003", "2023-10-15", "13001", "jhon", "raymonddhdhdyeye", "67.00", "980", "2023-10-15", "PAID"),
-            ("TR004", "2023-10-15", "13001", "jhon", "raymondereyeyey", "67.00", "980", "2025-05-04", "PENDING"),
-            ("TR005", "2023-10-15", "13001", "jhon", "raymondeyeyey", "67.00", "890", "2025-05-04", "PAID"),
-            ("TR006", "2023-10-15", "13001", "jhon", "raymondeyyrery", "67.00", "890", "2025-05-04", "PENDING"),
-            ("TR007", "2023-10-15", "13001", "jhon", "raymondeyeyey", "67.00", "980", "2025-05-04", "PENDING"),
-            ("TR008", "2023-10-15", "13001", "jhon", "raymondeyeyeyey", "67.00", "980", "2023-10-15", "PAID"),
-        ]
 
-        self.populate_table(sample_data)
+        IadminPageBack = adminPageBack()
+        self.populate_table(IadminPageBack.fetch_transactions())
         
         self.transaction_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.transaction_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
@@ -161,36 +152,35 @@ class TransactionsPage(QtWidgets.QWidget):
         self.transaction_table.setItemDelegate(delegate)
 
         # Add table to the main layout with full expansion
-        layout.addWidget(self.transaction_table)  
+        layout.addWidget(self.transaction_table)   
 
-    def populate_table(self, data):
+    def populate_table(self, data):   
         self.transaction_table.setRowCount(len(data))
-        for row, (trans_num, payment_date, client_number, client_name, employee, consumption, amount, due_date, status) in enumerate(data):
+        for row, transactions in enumerate(data):
+            trans_code, trans_payment_date, client_number, client_name, user_name, billing_consumption, billing_total, billing_due, trans_status = transactions
+            
             # For each cell that might have long text, create a custom widget with scrollable text
-            self.transaction_table.setItem(row, 0, QtWidgets.QTableWidgetItem(trans_num))
-            self.transaction_table.setItem(row, 1, QtWidgets.QTableWidgetItem(payment_date))
-            self.transaction_table.setItem(row, 2, QtWidgets.QTableWidgetItem(client_number))
-            
-            # For potentially long text fields, create custom label widgets
-            self.create_scrollable_cell(row, 3, client_name)
-            self.create_scrollable_cell(row, 4, employee)
-            
-            self.transaction_table.setItem(row, 5, QtWidgets.QTableWidgetItem(consumption))
-            self.transaction_table.setItem(row, 6, QtWidgets.QTableWidgetItem(amount))
-            self.transaction_table.setItem(row, 7, QtWidgets.QTableWidgetItem(due_date))
+            self.create_scrollable_cell(row, 0, str(trans_code))
+            self.create_scrollable_cell(row, 1, str(trans_payment_date))
+            self.create_scrollable_cell(row, 2, str(client_number))
+            self.create_scrollable_cell(row, 3, str(client_name))
+            self.create_scrollable_cell(row, 4, str(user_name))
+            self.create_scrollable_cell(row, 5, str(billing_consumption))
+            self.create_scrollable_cell(row, 6, str(billing_total))
+            self.create_scrollable_cell(row, 7, str(billing_due))
 
             # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
             status_layout.setContentsMargins(5, 0, 5, 0)
 
             # Status label
-            status_label = QtWidgets.QLabel(status)
-            status_label.setStyleSheet(f"color: {'#4CAF50' if status == 'PAID' else '#E57373'}; font-weight: bold;")
+            status_label = QtWidgets.QLabel(trans_status)
+            status_label.setStyleSheet(f"color: {'#4CAF50' if trans_status == 'PAID' else '#E57373'}; font-weight: bold;")
             
             # Toggle button
             toggle_button = QtWidgets.QPushButton()
             toggle_button.setCheckable(True)
-            toggle_button.setChecked(status == "PAID")
+            toggle_button.setChecked(trans_status == "PAID")
             toggle_button.setFixedSize(40, 20)
             toggle_button.setStyleSheet("""
                 QPushButton {

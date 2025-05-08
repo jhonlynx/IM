@@ -13,6 +13,7 @@ class AdminWorkersPage(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.setup_ui()
+        self.showMaximized()
 
     def create_scrollable_cell(self, row, column, text):
         scrollable_widget = ScrollableTextWidget(text)

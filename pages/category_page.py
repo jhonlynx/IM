@@ -16,6 +16,7 @@ class CategoryPage(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.setup_ui()
+        self.showMaximized()
 
     def create_scrollable_cell(self, row, column, text):
         scrollable_widget = ScrollableTextWidget(text)
@@ -148,7 +149,7 @@ class CategoryPage(QtWidgets.QWidget):
 
              # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
-            status_layout.setContentsMargins(5, 0, 5, 0)
+            status_layout.setContentsMargins(170, 0, 170, 0)
 
             # Status label
             status_label = QtWidgets.QLabel(category_status)

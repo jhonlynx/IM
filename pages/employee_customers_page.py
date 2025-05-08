@@ -194,7 +194,7 @@ class EmployeeCustomersPage(QtWidgets.QWidget):
 
               # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
-            status_layout.setContentsMargins(5, 0, 5, 0)
+            status_layout.setContentsMargins(50, 0, 50, 0)
 
             # Status label
             status_label = QtWidgets.QLabel(status)
