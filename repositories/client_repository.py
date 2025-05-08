@@ -27,7 +27,7 @@ class ClientRepository:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT c.CLIENT_ID, c.CLIENT_NUMBER, c.CLIENT_NAME, c.CLIENT_MNAME, c.CLIENT_LNAME, c.CLIENT_CONTACT_NUM,
-                    cat.CATEG_NAME,  a.ADDRESS_NAME, c.CLIENT_LOCATION, c.STATUS
+                    cat.CATEG_NAME,  a.ADDRESS_NAME, c.CLIENT_LOCATION, c.CLIENT_STATUS
                 FROM CLIENT c
                 JOIN CATEGORY cat ON c.CATEG_ID = cat.CATEG_ID
                 JOIN ADDRESS a ON c.ADDRESS_ID = a.ADDRESS_ID
@@ -37,9 +37,9 @@ class ClientRepository:
 
             formatted_clients = [
                 (
-                    client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status
+                    client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, client_status
                 )
-                for  client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status in clients
+                for  client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, client_status in clients
             ]
 
             return formatted_clients
