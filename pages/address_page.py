@@ -15,6 +15,10 @@ class AddressPage(QtWidgets.QWidget):
         self.parent = parent
         self.setup_ui()
 
+    def create_scrollable_cell(self, row, column, text):
+        scrollable_widget = ScrollableTextWidget(text)
+        self.address_table.setCellWidget(row, column, scrollable_widget)     
+
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -87,6 +91,14 @@ class AddressPage(QtWidgets.QWidget):
         self.address_table.setHorizontalHeaderLabels([
             "NAME", "DATE", "STATUS"
         ])
+
+        # Set the table to fill all available space
+        self.address_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.address_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        
+        # Enable horizontal scrollbar
+        self.address_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.address_table.setWordWrap(False)
         
         IadminPageBack = adminPageBack()
 
@@ -98,6 +110,11 @@ class AddressPage(QtWidgets.QWidget):
         self.address_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.address_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
+        # Create a custom delegate for text elision with tooltip
+        delegate = TextEllipsisDelegate(self.address_table)
+        self.address_table.setItemDelegate(delegate)
+
+        # Add table to the main layout with full expansion
         layout.addWidget(self.address_table)
 
 
@@ -108,8 +125,8 @@ class AddressPage(QtWidgets.QWidget):
         for row, address in enumerate(data):
             address_id, address_name, address_status, address_date = address
 
-            self.address_table.setItem(row, 0, QtWidgets.QTableWidgetItem(address_name))
-            self.address_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(address_date)))
+            self.create_scrollable_cell(row, 0, address_name)
+            self.create_scrollable_cell(row, 1, str(address_date))
 
              # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
@@ -158,9 +175,9 @@ class AddressPage(QtWidgets.QWidget):
     def filter_table(self, text):
         # Filter rows based on the search text
         for row in range(self.address_table.rowCount()):
-            item = self.address_table.item(row, 0)  # Look at the 'NAME' column (index 1)
-            if item:
-                address_name = item.text().lower()
+            cell_widget = self.address_table.cellWidget(row, 0)  # Get the ScrollableTextWidget
+            if cell_widget:
+                address_name = cell_widget.text().lower()  # Get text from the widget
                 if text.lower() in address_name:
                     self.address_table.setRowHidden(row, False)  # Show row if name matches
                 else:
@@ -203,6 +220,119 @@ class AddressPage(QtWidgets.QWidget):
                     toggle_button.setChecked(current_status == "Active")
 
                 toggle_button.blockSignals(False)
+
+class ScrollableTextWidget(QtWidgets.QWidget):
+    
+    def __init__(self, text, parent=None):
+        super(ScrollableTextWidget, self).__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create scrollable text area
+        self.text_area = QtWidgets.QScrollArea()
+        self.text_area.setWidgetResizable(True)
+        self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)  
+        self.text_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.text_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        
+        # Create a label with the text
+        self.label = QtWidgets.QLabel(text)
+        self.label.setTextFormat(QtCore.Qt.PlainText)
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        
+        # Add label to scroll area
+        self.text_area.setWidget(self.label)
+        
+        # Add scroll area to layout
+        layout.addWidget(self.text_area)
+        
+        # Set the widget's style
+        self.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+            }
+            QLabel {
+                background-color: transparent;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            QScrollBar:horizontal {
+                height: 10px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #c0c0c0;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
+            }
+        """)
+        
+        # Add tooltip for the full text
+        self.setToolTip(text)
+
+        # Install event filter to track mouse events
+        self.installEventFilter(self)
+        
+    def text(self):
+        return self.label.text()
+    
+    def eventFilter(self, obj, event):
+        if obj is self:
+            if event.type() == QtCore.QEvent.Enter:
+                # Show scrollbar when mouse enters
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+                return True
+            elif event.type() == QtCore.QEvent.Leave:
+                # Hide scrollbar when mouse leaves
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+                return True
+        return super(ScrollableTextWidget, self).eventFilter(obj, event)
+
+
+class TextEllipsisDelegate(QtWidgets.QStyledItemDelegate):
+    
+    def __init__(self, parent=None):
+        super(TextEllipsisDelegate, self).__init__(parent)
+        
+    def paint(self, painter, option, index):
+        # Use default painting
+        super(TextEllipsisDelegate, self).paint(painter, option, index)
+        
+    def helpEvent(self, event, view, option, index):
+        # Show tooltip when hovering if text is truncated
+        if not event or not view:
+            return False
+            
+        if event.type() == QtCore.QEvent.ToolTip:
+            # Get the cell widget
+            cell_widget = view.cellWidget(index.row(), index.column())
+            
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                # Show tooltip for ScrollableTextWidget
+                QtWidgets.QToolTip.showText(event.globalPos(), cell_widget.text(), view)
+                return True
+            else:
+                # For standard items
+                item = view.itemFromIndex(index)
+                if item:
+                    text = item.text()
+                    width = option.rect.width()
+                    metrics = QtGui.QFontMetrics(option.font)
+                    elidedText = metrics.elidedText(text, QtCore.Qt.ElideRight, width)
+                    
+                    # If text is truncated, show tooltip
+                    if elidedText != text:
+                        QtWidgets.QToolTip.showText(event.globalPos(), text, view)
+                    else:
+                        QtWidgets.QToolTip.hideText()
+                    
+                    return True
+                
+        return super(TextEllipsisDelegate, self).helpEvent(event, view, option, index)                
                
 
 

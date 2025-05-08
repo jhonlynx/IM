@@ -17,6 +17,10 @@ class CategoryPage(QtWidgets.QWidget):
         self.parent = parent
         self.setup_ui()
 
+    def create_scrollable_cell(self, row, column, text):
+        scrollable_widget = ScrollableTextWidget(text)
+        self.categorys_table.setCellWidget(row, column, scrollable_widget)    
+
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -106,6 +110,14 @@ class CategoryPage(QtWidgets.QWidget):
         self.categorys_table.setHorizontalHeaderLabels([
             "NAME", "DATE", "STATUS", "ACTION"
         ])
+
+        # Set the table to fill all available space
+        self.categorys_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.categorys_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        
+        # Enable horizontal scrollbar
+        self.categorys_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.categorys_table.setWordWrap(False)
         
         IadminPageBack = adminPageBack()
         
@@ -116,6 +128,11 @@ class CategoryPage(QtWidgets.QWidget):
         self.categorys_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.categorys_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
+        # Create a custom delegate for text elision with tooltip
+        delegate = TextEllipsisDelegate(self.categorys_table)
+        self.categorys_table.setItemDelegate(delegate)
+
+        # Add table to the main layout with full expansion
         layout.addWidget(self.categorys_table)
 
 
@@ -126,8 +143,8 @@ class CategoryPage(QtWidgets.QWidget):
         for row, category in enumerate(data):
             category_id, category_name, category_status, category_date  = category
 
-            self.categorys_table.setItem(row, 0, QtWidgets.QTableWidgetItem(category_name))
-            self.categorys_table.setItem(row,1, QtWidgets.QTableWidgetItem(str(category_date)))
+            self.create_scrollable_cell(row, 0, category_name)
+            self.create_scrollable_cell(row,1, str(category_date))
 
              # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
@@ -444,9 +461,9 @@ class CategoryPage(QtWidgets.QWidget):
     def filter_table(self, text):
         # Filter rows based on the search text
         for row in range(self.categorys_table.rowCount()):
-            item = self.categorys_table.item(row, 0)  # Look at the 'NAME' column (index 1)
-            if item:
-                category_name = item.text().lower()
+            cell_widget = self.categorys_table.cellWidget(row, 0)  # Get the NAME column widget
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                category_name = cell_widget.text().lower()
                 if text.lower() in category_name:
                     self.categorys_table.setRowHidden(row, False)  # Show row if name matches
                 else:
@@ -461,7 +478,7 @@ class CategoryPage(QtWidgets.QWidget):
                 category_id = toggle_button.property("category_id")
                 IadminPageBack = adminPageBack()
                 category_info = IadminPageBack.get_category_by_id(category_id)
-                current_status = category_info[0][2]  # 'Active' or 'Inactive 
+                current_status = category_info[0][2]  # 'Active' or 'Inactive'
                 next_status = 'Inactive' if current_status == 'Active' else 'Active'
 
                 # Block toggle auto-switch
@@ -480,14 +497,125 @@ class CategoryPage(QtWidgets.QWidget):
                     # Update label and toggle state
                     label.setText(next_status)
                     label.setStyleSheet(f"color: {'#4CAF50' if next_status == 'Active' else '#E57373'}; font-weight: bold;")
-                    toggle_button.setChecked(next_status == "Active")
-
-                    
+                    toggle_button.setChecked(next_status == "Active")  # Convert to boolean
                 else:
-                    #keep original state
-                    toggle_button.setChecked(current_status)
+                    # Keep original state
+                    toggle_button.setChecked(current_status == "Active")  # Convert to boolean
 
                 toggle_button.blockSignals(False)
+
+class ScrollableTextWidget(QtWidgets.QWidget):
+    
+    def __init__(self, text, parent=None):
+        super(ScrollableTextWidget, self).__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create scrollable text area
+        self.text_area = QtWidgets.QScrollArea()
+        self.text_area.setWidgetResizable(True)
+        self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)  
+        self.text_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.text_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        
+        # Create a label with the text
+        self.label = QtWidgets.QLabel(text)
+        self.label.setTextFormat(QtCore.Qt.PlainText)
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        
+        # Add label to scroll area
+        self.text_area.setWidget(self.label)
+        
+        # Add scroll area to layout
+        layout.addWidget(self.text_area)
+        
+        # Set the widget's style
+        self.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+            }
+            QLabel {
+                background-color: transparent;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            QScrollBar:horizontal {
+                height: 10px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #c0c0c0;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
+            }
+        """)
+        
+        # Add tooltip for the full text
+        self.setToolTip(text)
+
+        # Install event filter to track mouse events
+        self.installEventFilter(self)
+        
+    def text(self):
+        return self.label.text()
+    
+    def eventFilter(self, obj, event):
+        if obj is self:
+            if event.type() == QtCore.QEvent.Enter:
+                # Show scrollbar when mouse enters
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+                return True
+            elif event.type() == QtCore.QEvent.Leave:
+                # Hide scrollbar when mouse leaves
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+                return True
+        return super(ScrollableTextWidget, self).eventFilter(obj, event)
+
+
+class TextEllipsisDelegate(QtWidgets.QStyledItemDelegate):
+    
+    def __init__(self, parent=None):
+        super(TextEllipsisDelegate, self).__init__(parent)
+        
+    def paint(self, painter, option, index):
+        # Use default painting
+        super(TextEllipsisDelegate, self).paint(painter, option, index)
+        
+    def helpEvent(self, event, view, option, index):
+        # Show tooltip when hovering if text is truncated
+        if not event or not view:
+            return False
+            
+        if event.type() == QtCore.QEvent.ToolTip:
+            # Get the cell widget
+            cell_widget = view.cellWidget(index.row(), index.column())
+            
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                # Show tooltip for ScrollableTextWidget
+                QtWidgets.QToolTip.showText(event.globalPos(), cell_widget.text(), view)
+                return True
+            else:
+                # For standard items
+                item = view.itemFromIndex(index)
+                if item:
+                    text = item.text()
+                    width = option.rect.width()
+                    metrics = QtGui.QFontMetrics(option.font)
+                    elidedText = metrics.elidedText(text, QtCore.Qt.ElideRight, width)
+                    
+                    # If text is truncated, show tooltip
+                    if elidedText != text:
+                        QtWidgets.QToolTip.showText(event.globalPos(), text, view)
+                    else:
+                        QtWidgets.QToolTip.hideText()
+                    
+                    return True
+                
+        return super(TextEllipsisDelegate, self).helpEvent(event, view, option, index)                
 
 
 

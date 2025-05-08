@@ -14,6 +14,10 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         self.parent = parent
         self.setup_ui()
 
+    def create_scrollable_cell(self, row, column, text):
+        scrollable_widget = ScrollableTextWidget(text)
+        self.billing_table.setCellWidget(row, column, scrollable_widget)     
+
     def setup_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -66,6 +70,7 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         self.search_input.setPlaceholderText("Search billings...")
         self.search_input.setStyleSheet(input_style)
         search_container.addWidget(self.search_input)
+        self.search_input.textChanged.connect(self.filter_table)  # Add this connection
         
         # Add search container to search_add_layout
         search_add_layout.addLayout(search_container)
@@ -117,6 +122,14 @@ class EmployeeBillingPage(QtWidgets.QWidget):
             "CLIENT NAME", "CLIENT LOCATION", "BILLING TOTAL", "STATUS"
         ])
 
+        # Set the table to fill all available space
+        self.billing_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.billing_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        
+        # Enable horizontal scrollbar
+        self.billing_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.billing_table.setWordWrap(False)
+
         billing_back = adminPageBack()
         data = billing_back.fetch_billing()
         
@@ -128,6 +141,11 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         self.billing_table.verticalHeader().setVisible(False)
         self.billing_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
+        # Create a custom delegate for text elision with tooltip
+        delegate = TextEllipsisDelegate(self.billing_table)
+        self.billing_table.setItemDelegate(delegate)
+
+        # Add table to the main layout with full expansion
         layout.addWidget(self.billing_table)
 
 
@@ -139,14 +157,13 @@ class EmployeeBillingPage(QtWidgets.QWidget):
             billing_code, issued_date, billing_due, client_id, client_name, client_location, billing_total, status = billings
 
             # Add customer data to the table
-            self.billing_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(billing_code))),
-            self.billing_table.setItem(row, 1, QtWidgets.QTableWidgetItem(str(issued_date))),
-            self.billing_table.setItem(row, 2, QtWidgets.QTableWidgetItem(str(billing_due))),
-            self.billing_table.setItem(row, 3, QtWidgets.QTableWidgetItem(str(client_id))),
-            self.billing_table.setItem(row, 4, QtWidgets.QTableWidgetItem(client_name)),
-            self.billing_table.setItem(row, 5, QtWidgets.QTableWidgetItem(client_location)),
-            self.billing_table.setItem(row, 6, QtWidgets.QTableWidgetItem(str(billing_total)))
-            self.billing_table.setItem(row, 7, QtWidgets.QTableWidgetItem(status))
+            self.create_scrollable_cell(row, 0, str(billing_code)),
+            self.create_scrollable_cell(row, 1, str(issued_date)),
+            self.create_scrollable_cell(row, 2, str(billing_due)),
+            self.create_scrollable_cell(row, 3, str(client_id)),
+            self.create_scrollable_cell(row, 4, client_name),
+            self.create_scrollable_cell(row, 5, client_location),
+            self.create_scrollable_cell(row, 6, str(billing_total)),
 
             # Status with color coding
             status_item = QtWidgets.QTableWidgetItem(status)
@@ -188,24 +205,20 @@ class EmployeeBillingPage(QtWidgets.QWidget):
         search_by = self.search_criteria.currentText()
         search_text = self.search_input.text().lower()
 
+        column_mapping = {
+            "BILLING CODE": 0,
+            "CLIENT NAME": 4,
+            "CLIENT LOCATION": 5
+        }
+
         for row in range(self.billing_table.rowCount()):
-            match = False
-            if search_text:
-                if search_by == "BILLING CODE":
-                    item = self.billing_table.item(row, 0)
-                elif search_by == "CLIENT ID":
-                    item = self.billing_table.item(row, 3)
-                elif search_by == "CLIENT NAME":
-                    item = self.billing_table.item(row, 4)
-                elif search_by == "CLIENT LOCATION":
-                    item = self.billing_table.item(row, 5)    
-
-                if item and search_text in item.text().lower():
-                    match = True
-            else:
-                match = True
-
-            self.billing_table.setRowHidden(row, not match)
+            col_index = column_mapping.get(search_by, 0)
+            cell_widget = self.billing_table.cellWidget(row, col_index)
+            
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                cell_text = cell_widget.text().lower()
+                match = search_text in cell_text if search_text else True
+                self.billing_table.setRowHidden(row, not match)
 
 
     def show_add_billing(self):
@@ -674,11 +687,120 @@ class EmployeeBillingPage(QtWidgets.QWidget):
 
         save_btn.clicked.connect(save_bill)
 
-            
-            
-
-
         dialog.exec_()
+
+class ScrollableTextWidget(QtWidgets.QWidget):
+    
+    def __init__(self, text, parent=None):
+        super(ScrollableTextWidget, self).__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create scrollable text area
+        self.text_area = QtWidgets.QScrollArea()
+        self.text_area.setWidgetResizable(True)
+        self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)  
+        self.text_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.text_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        
+        # Create a label with the text
+        self.label = QtWidgets.QLabel(text)
+        self.label.setTextFormat(QtCore.Qt.PlainText)
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        
+        # Add label to scroll area
+        self.text_area.setWidget(self.label)
+        
+        # Add scroll area to layout
+        layout.addWidget(self.text_area)
+        
+        # Set the widget's style
+        self.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+            }
+            QLabel {
+                background-color: transparent;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            QScrollBar:horizontal {
+                height: 10px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #c0c0c0;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
+            }
+        """)
+        
+        # Add tooltip for the full text
+        self.setToolTip(text)
+
+        # Install event filter to track mouse events
+        self.installEventFilter(self)
+        
+    def text(self):
+        return self.label.text()
+    
+    def eventFilter(self, obj, event):
+        if obj is self:
+            if event.type() == QtCore.QEvent.Enter:
+                # Show scrollbar when mouse enters
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+                return True
+            elif event.type() == QtCore.QEvent.Leave:
+                # Hide scrollbar when mouse leaves
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+                return True
+        return super(ScrollableTextWidget, self).eventFilter(obj, event)
+
+
+class TextEllipsisDelegate(QtWidgets.QStyledItemDelegate):
+    
+    def __init__(self, parent=None):
+        super(TextEllipsisDelegate, self).__init__(parent)
+        
+    def paint(self, painter, option, index):
+        # Use default painting
+        super(TextEllipsisDelegate, self).paint(painter, option, index)
+        
+    def helpEvent(self, event, view, option, index):
+        # Show tooltip when hovering if text is truncated
+        if not event or not view:
+            return False
+            
+        if event.type() == QtCore.QEvent.ToolTip:
+            # Get the cell widget
+            cell_widget = view.cellWidget(index.row(), index.column())
+            
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                # Show tooltip for ScrollableTextWidget
+                QtWidgets.QToolTip.showText(event.globalPos(), cell_widget.text(), view)
+                return True
+            else:
+                # For standard items
+                item = view.itemFromIndex(index)
+                if item:
+                    text = item.text()
+                    width = option.rect.width()
+                    metrics = QtGui.QFontMetrics(option.font)
+                    elidedText = metrics.elidedText(text, QtCore.Qt.ElideRight, width)
+                    
+                    # If text is truncated, show tooltip
+                    if elidedText != text:
+                        QtWidgets.QToolTip.showText(event.globalPos(), text, view)
+                    else:
+                        QtWidgets.QToolTip.hideText()
+                    
+                    return True
+                
+        return super(TextEllipsisDelegate, self).helpEvent(event, view, option, index)        
         
 
           

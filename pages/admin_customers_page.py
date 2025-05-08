@@ -14,6 +14,10 @@ class AdminCustomersPage(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.setup_ui()
+
+    def create_scrollable_cell(self, row, column, text):
+        scrollable_widget = ScrollableTextWidget(text)
+        self.customers_table.setCellWidget(row, column, scrollable_widget)    
         
 
     def setup_ui(self):
@@ -39,7 +43,7 @@ class AdminCustomersPage(QtWidgets.QWidget):
         
         # Search criteria dropdown
         self.search_criteria = QtWidgets.QComboBox()
-        self.search_criteria.addItems(["ID", "First Name", "Last Name", "Location", "Category"])
+        self.search_criteria.addItems(["Client Number", "First Name", "Last Name", "Location", "Category"])
         self.search_criteria.setStyleSheet("""
             QComboBox {
                 padding: 8px;
@@ -129,16 +133,31 @@ class AdminCustomersPage(QtWidgets.QWidget):
                 font-family: 'Roboto', sans-serif;
                 font-weight: bold;
             }
+            QTableWidget::item:selected {
+                background-color: transparent; /* Or set to same as normal background */
+                color: black;
+            }
+            QTableWidget::item:hover {
+                background-color: transparent; /* Disable hover highlight */
+            }
         """)
 
         
-        # Set up columns (10 columns)
+        # Set up columns (9 columns)
         self.customers_table.setColumnCount(9)
         self.customers_table.verticalHeader().setVisible(False)
         self.customers_table.setHorizontalHeaderLabels([
             "CLIENT NUMBER", "FIRST NAME", "MIDDLE NAME", "LAST NAME", "CONTACT",
             "CATEGORY", "ADDRESS", "LOCATION", "STATUS"
         ])
+
+        # Set the table to fill all available space
+        self.customers_table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.customers_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        
+        # Enable horizontal scrollbar
+        self.customers_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.customers_table.setWordWrap(False)
         
         customer_back = adminPageBack()
         data = customer_back.fetch_clients()
@@ -150,7 +169,12 @@ class AdminCustomersPage(QtWidgets.QWidget):
         self.customers_table.setSelectionBehavior(QtWidgets.QTableWidget.SelectRows)
         self.customers_table.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
         
-        layout.addWidget(self.customers_table)
+        # Create a custom delegate for text elision with tooltip
+        delegate = TextEllipsisDelegate(self.customers_table)
+        self.customers_table.setItemDelegate(delegate)
+
+        # Add table to the main layout with full expansion
+        layout.addWidget(self.customers_table)  
 
 
     def populate_table(self, data):
@@ -160,15 +184,15 @@ class AdminCustomersPage(QtWidgets.QWidget):
         for row, customer in enumerate(data):
             client_id, client_number, fname, middle_name, lname, contact, categ_name, address_id, location, status = customer
 
-            # Add customer data to the table
-            self.customers_table.setItem(row, 0, QtWidgets.QTableWidgetItem(str(client_number)))
-            self.customers_table.setItem(row, 1, QtWidgets.QTableWidgetItem(fname))
-            self.customers_table.setItem(row, 2, QtWidgets.QTableWidgetItem(middle_name))
-            self.customers_table.setItem(row, 3, QtWidgets.QTableWidgetItem(lname))
-            self.customers_table.setItem(row, 4, QtWidgets.QTableWidgetItem(contact))
-            self.customers_table.setItem(row, 5, QtWidgets.QTableWidgetItem(categ_name))
-            self.customers_table.setItem(row, 6, QtWidgets.QTableWidgetItem(address_id))
-            self.customers_table.setItem(row, 7, QtWidgets.QTableWidgetItem(location))
+            # Use create_scrollable_cell for all data columns
+            self.create_scrollable_cell(row, 0, str(client_number))
+            self.create_scrollable_cell(row, 1, fname)
+            self.create_scrollable_cell(row, 2, middle_name)
+            self.create_scrollable_cell(row, 3, lname)
+            self.create_scrollable_cell(row, 4, contact)
+            self.create_scrollable_cell(row, 5, categ_name)
+            self.create_scrollable_cell(row, 6, address_id)
+            self.create_scrollable_cell(row, 7, location)
 
              # Create status layout with label + toggle button
             status_layout = QtWidgets.QHBoxLayout()
@@ -215,27 +239,25 @@ class AdminCustomersPage(QtWidgets.QWidget):
         else:
             search_text = self.search_input.text().lower()
         
+        column_mapping = {
+            "Client Number": 0,
+            "First Name": 1,
+            "Last Name": 3,
+            "Location": 7,
+            "Category": 5
+        }
+        
         for row in range(self.customers_table.rowCount()):
-            match = False
-            if search_text:
-                if search_by == "ID":
-                    item = self.customers_table.item(row, 0)
-                elif search_by == "First Name":
-                    item = self.customers_table.item(row, 2)
-                elif search_by == "Last Name":
-                    item = self.customers_table.item(row, 4)
-                elif search_by == "Location":
-                    item = self.customers_table.item(row, 8)
-                elif search_by == "Category":
-                    item = self.customers_table.item(row, 6)
-
+            if not search_text:
+                self.customers_table.setRowHidden(row, False)
+                continue
                 
-                if item and search_text in item.text().lower():
-                    match = True
-            else:
-                match = True
-                
-            self.customers_table.setRowHidden(row, not match)
+            col_index = column_mapping.get(search_by, -1)
+            if col_index >= 0:
+                cell_widget = self.customers_table.cellWidget(row, col_index)
+                if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                    cell_text = cell_widget.text().lower()
+                    self.customers_table.setRowHidden(row, search_text not in cell_text)
 
     def show_add_customer_page(self):
         add_dialog = QtWidgets.QDialog(self)
@@ -416,12 +438,12 @@ class AdminCustomersPage(QtWidgets.QWidget):
  
 
     def toggle_search_input(self, text):
-            if text == "Category":
-                self.search_input.hide()
-                self.search_input_combo.show()
-            else:
-                self.search_input.show()
-                self.search_input_combo.hide() 
+        if text == "Category":
+            self.search_input.hide()
+            self.search_input_combo.show()
+        else:
+            self.search_input.show()
+            self.search_input_combo.hide() 
 
     def toggle_status(self, row, label):
         table = self.customers_table
@@ -460,7 +482,120 @@ class AdminCustomersPage(QtWidgets.QWidget):
 
                 # Re-enable the signal after handling
                 toggle_button.blockSignals(False)
-                      
+
+
+class ScrollableTextWidget(QtWidgets.QWidget):
+    
+    def __init__(self, text, parent=None):
+        super(ScrollableTextWidget, self).__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create scrollable text area
+        self.text_area = QtWidgets.QScrollArea()
+        self.text_area.setWidgetResizable(True)
+        self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)  
+        self.text_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.text_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        
+        # Create a label with the text
+        self.label = QtWidgets.QLabel(text)
+        self.label.setTextFormat(QtCore.Qt.PlainText)
+        self.label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        
+        # Add label to scroll area
+        self.text_area.setWidget(self.label)
+        
+        # Add scroll area to layout
+        layout.addWidget(self.text_area)
+        
+        # Set the widget's style
+        self.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+            }
+            QLabel {
+                background-color: transparent;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+            QScrollBar:horizontal {
+                height: 10px;
+                background: transparent;
+                margin: 0px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #c0c0c0;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                width: 0px;
+            }
+        """)
+        
+        # Add tooltip for the full text
+        self.setToolTip(text)
+
+        # Install event filter to track mouse events
+        self.installEventFilter(self)
+        
+    def text(self):
+        return self.label.text()
+    
+    def eventFilter(self, obj, event):
+        if obj is self:
+            if event.type() == QtCore.QEvent.Enter:
+                # Show scrollbar when mouse enters
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+                return True
+            elif event.type() == QtCore.QEvent.Leave:
+                # Hide scrollbar when mouse leaves
+                self.text_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+                return True
+        return super(ScrollableTextWidget, self).eventFilter(obj, event)
+
+
+class TextEllipsisDelegate(QtWidgets.QStyledItemDelegate):
+    
+    def __init__(self, parent=None):
+        super(TextEllipsisDelegate, self).__init__(parent)
+        
+    def paint(self, painter, option, index):
+        # Use default painting
+        super(TextEllipsisDelegate, self).paint(painter, option, index)
+        
+    def helpEvent(self, event, view, option, index):
+        # Show tooltip when hovering if text is truncated
+        if not event or not view:
+            return False
+            
+        if event.type() == QtCore.QEvent.ToolTip:
+            # Get the cell widget
+            cell_widget = view.cellWidget(index.row(), index.column())
+            
+            if cell_widget and isinstance(cell_widget, ScrollableTextWidget):
+                # Show tooltip for ScrollableTextWidget
+                QtWidgets.QToolTip.showText(event.globalPos(), cell_widget.text(), view)
+                return True
+            else:
+                # For standard items
+                item = view.itemFromIndex(index)
+                if item:
+                    text = item.text()
+                    width = option.rect.width()
+                    metrics = QtGui.QFontMetrics(option.font)
+                    elidedText = metrics.elidedText(text, QtCore.Qt.ElideRight, width)
+                    
+                    # If text is truncated, show tooltip
+                    if elidedText != text:
+                        QtWidgets.QToolTip.showText(event.globalPos(), text, view)
+                    else:
+                        QtWidgets.QToolTip.hideText()
+                    
+                    return True
+                
+        return super(TextEllipsisDelegate, self).helpEvent(event, view, option, index)
 
 
 if __name__ == "__main__":
